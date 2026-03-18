@@ -10,7 +10,7 @@ Overview of the starter template configuration and how each piece works.
 | Styling      | Tailwind CSS v4         |
 | UI Components | shadcn/ui (Base UI)   |
 | API / Data   | tRPC v11 + TanStack React Query v5 |
-| Database     | PostgreSQL (Neon serverless driver) |
+| Database     | PostgreSQL + Prisma 6 ORM (Neon serverless driver for raw SQL) |
 | Auth         | Clerk                   |
 | Linting/Format | Biome                |
 
@@ -25,8 +25,15 @@ Overview of the starter template configuration and how each piece works.
 
 ### Development (Local Postgres)
 
-- **Config:** `LOCAL_DATABASE_URL` is used when `NODE_ENV === "development"`
+- **Config:** `LOCAL_DATABASE_URL` is used when `NODE_ENV === "development"` (for `getSql()`)
 - If `LOCAL_DATABASE_URL` is unset, it falls back to `DATABASE_URL`
+
+### Prisma ORM
+
+- **Config:** Prisma uses `DATABASE_URL` only (no LOCAL_DATABASE_URL). For local dev, set `DATABASE_URL` to your local Postgres URL.
+- **Client:** `lib/prisma.ts` exports a singleton `prisma` instance (avoids hot-reload connection exhaustion).
+- **tRPC:** `ctx.prisma` available in all procedures. See `prismaHealth` in `_app.ts` for usage.
+- **Migrations:** Run `npm run db:migrate` after schema changes. Use `db:push` for quick prototyping without migration files.
 
 ### Create Local Database
 
@@ -109,7 +116,7 @@ Avoid protecting `/sign-in` and `/sign-up` to prevent redirect loops.
 | Variable | Required | Description |
 | -------- | -------- | ----------- |
 | `LOCAL_DATABASE_URL` | Dev only | Local Postgres URL (e.g. `postgresql://localhost:5432/app_dev`) |
-| `DATABASE_URL` | Prod / fallback | Production Postgres URL (e.g. Neon) |
+| `DATABASE_URL` | Yes | Postgres URL — used by Prisma; in dev set to local, in prod to Neon |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (auth) | From [Clerk Dashboard](https://dashboard.clerk.com) |
 | `CLERK_SECRET_KEY` | Yes (auth) | From Clerk Dashboard |
 
@@ -125,8 +132,11 @@ app/
   page.tsx
   api/trpc/[trpc]/route.ts
 lib/
-  db.ts               # getSql() — Neon driver, env-aware URL
+  db.ts               # getSql() — Neon driver for raw SQL
+  prisma.ts           # PrismaClient singleton
   utils.ts            # cn() for shadcn
+prisma/
+  schema.prisma       # Prisma schema
 trpc/
   init.ts             # createTRPCContext, baseProcedure, protectedProcedure
   client.tsx          # TRPCReactProvider
@@ -148,5 +158,9 @@ proxy.ts              # Clerk auth (Next.js 16 proxy convention)
 | `npm run build` | Production build |
 | `npm run start` | Start production server |
 | `npm run db:create` | Create local Postgres DB |
+| `npm run db:generate` | Generate Prisma client |
+| `npm run db:migrate` | Run migrations (dev) |
+| `npm run db:push` | Push schema to DB (prototyping) |
+| `npm run db:studio` | Open Prisma Studio |
 | `npm run check` | Biome lint + format check |
 | `npm run check:fix` | Biome fix all |

@@ -11,6 +11,10 @@ export const appRouter = createTRPCRouter({
 		const rows = (await sql`SELECT 1 as ok`) as { ok: number }[];
 		return { ok: Number(rows[0]?.ok) === 1 };
 	}),
+	prismaHealth: baseProcedure.query(async ({ ctx }) => {
+		await ctx.prisma.$queryRaw`SELECT 1`;
+		return { ok: true };
+	}),
 });
 
 export type AppRouter = typeof appRouter;

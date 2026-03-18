@@ -1,9 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
 import { initTRPC, TRPCError } from "@trpc/server";
+import { prisma } from "@/lib/prisma";
 
 export const createTRPCContext = async (_opts: { headers: Headers }) => {
 	const { userId } = await auth();
-	return { userId: userId ?? null };
+	return { userId: userId ?? null, prisma };
 };
 
 const t = initTRPC.context<typeof createTRPCContext>().create({});
