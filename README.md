@@ -1,36 +1,176 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Template Setup
 
-## Getting Started
+Overview of the starter template configuration and how each piece works.
 
-First, run the development server:
+## Stack
+
+
+| Layer          | Tech                                                           |
+| -------------- | -------------------------------------------------------------- |
+| Framework      | Next.js 16 (App Router)                                        |
+| Styling        | Tailwind CSS v4                                                |
+| UI Components  | shadcn/ui (Base UI)                                            |
+| API / Data     | tRPC v11 + TanStack React Query v5                             |
+| Database       | PostgreSQL + Prisma 6 ORM (Neon serverless driver for raw SQL) |
+| Auth           | Clerk                                                          |
+| Linting/Format | Biome                                                          |
+
+
+---
+
+## Database
+
+### Production
+
+- **Driver:** `@neondatabase/serverless` (Neon’s serverless Postgres client; works with any Postgres 15+)
+- **Config:** `DATABASE_URL` in env (Neon or other Postgres URL)
+
+### Development (Local Postgres)
+
+- **Config:** `LOCAL_DATABASE_URL` is used when `NODE_ENV === "development"` (for `getSql()`)
+- If `LOCAL_DATABASE_URL` is unset, it falls back to `DATABASE_URL`
+
+### Prisma ORM
+
+- **Config:** Prisma uses `DATABASE_URL` only (no LOCAL_DATABASE_URL). For local dev, set `DATABASE_URL` to your local Postgres URL.
+- **Client:** `lib/prisma.ts` exports a singleton `prisma` instance (avoids hot-reload connection exhaustion).
+- **tRPC:** `ctx.prisma` available in all procedures. See `prismaHealth` in `_app.ts` for usage.
+- **Migrations:** Run `npm run db:migrate` after schema changes. Use `db:push` for quick prototyping without migration files.
+
+### Create Local Database
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm run db:create
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Creates a DB named `app_dev` (or first arg / `LOCAL_DB_NAME`). Uses `PGHOST`, `PGPORT`, `PGUSER` when set (defaults: localhost, 5432, current user).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Usage:**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+# Default: app_dev
+npm run db:create
 
-## Learn More
+# Custom name
+./scripts/create-db.sh mydb
 
-To learn more about Next.js, take a look at the following resources:
+# Custom host/port/user
+PGHOST=127.0.0.1 PGPORT=5433 npm run db:create
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Then in `.env.local`:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```
+LOCAL_DATABASE_URL="postgresql://$USER@localhost:5432/app_dev"
+```
 
-## Deploy on Vercel
+---
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Auth (Clerk)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### File Conventions
+
+- **Next.js 16+:** use `proxy.ts` at project root (middleware is deprecated)
+- **Next.js ≤15:** use `middleware.ts` instead; same code
+
+### Setup
+
+- `proxy.ts`**:** `clerkMiddleware()` as default export, runs on all routes except static assets
+- `app/layout.tsx`**:** Root layout wrapped in `<ClerkProvider>`
+- **tRPC:** `createTRPCContext` uses `auth()` and sets `userId: string | null`
+
+### Procedures
+
+- `baseProcedure`**:** Public; `ctx.userId` may be null
+- `protectedProcedure`**:** Requires auth; throws `UNAUTHORIZED` if `userId` is null
+
+Example:
+
+```ts
+// Public
+hello: baseProcedure.input(z.object({ text: z.string() })).query(...)
+
+// Auth required
+me: protectedProcedure.query(async ({ ctx }) => {
+  return { userId: ctx.userId }; // ctx.userId is string
+})
+```
+
+### Route Protection
+
+Clerk does not protect routes by default. To protect specific routes, use `createRouteMatcher` in `proxy.ts`:
+
+```ts
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server'
+
+const isProtectedRoute = createRouteMatcher(['/dashboard(.*)', '/settings(.*)'])
+
+export default clerkMiddleware(async (auth, req) => {
+  if (isProtectedRoute(req)) await auth.protect()
+})
+
+export const config = { matcher: [...] }
+```
+
+Avoid protecting `/sign-in` and `/sign-up` to prevent redirect loops.
+
+---
+
+## Environment Variables
+
+
+| Variable                            | Required   | Description                                                         |
+| ----------------------------------- | ---------- | ------------------------------------------------------------------- |
+| `LOCAL_DATABASE_URL`                | Dev only   | Local Postgres URL (e.g. `postgresql://localhost:5432/app_dev`)     |
+| `DATABASE_URL`                      | Yes        | Postgres URL — used by Prisma; in dev set to local, in prod to Neon |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (auth) | From [Clerk Dashboard](https://dashboard.clerk.com)                 |
+| `CLERK_SECRET_KEY`                  | Yes (auth) | From Clerk Dashboard                                                |
+
+
+Copy `.env.example` to `.env.local` and fill in values.
+
+---
+
+## Project Structure (Relevant Paths)
+
+```
+app/
+  layout.tsx          # ClerkProvider + TRPCReactProvider
+  page.tsx
+  api/trpc/[trpc]/route.ts
+lib/
+  db.ts               # getSql() — Neon driver for raw SQL
+  prisma.ts           # PrismaClient singleton
+  utils.ts            # cn() for shadcn
+prisma/
+  schema.prisma       # Prisma schema
+trpc/
+  init.ts             # createTRPCContext, baseProcedure, protectedProcedure
+  client.tsx          # TRPCReactProvider
+  server.ts           # createTRPCCaller for RSC
+  query-client.ts
+  routers/_app.ts     # Root router
+scripts/
+  create-db.sh        # psql script for local DB
+proxy.ts              # Clerk auth (Next.js 16 proxy convention)
+```
+
+---
+
+## Scripts
+
+
+| Script                | Description                     |
+| --------------------- | ------------------------------- |
+| `npm run dev`         | Start dev server                |
+| `npm run build`       | Production build                |
+| `npm run start`       | Start production server         |
+| `npm run db:create`   | Create local Postgres DB        |
+| `npm run db:generate` | Generate Prisma client          |
+| `npm run db:migrate`  | Run migrations (dev)            |
+| `npm run db:push`     | Push schema to DB (prototyping) |
+| `npm run db:studio`   | Open Prisma Studio              |
+| `npm run check`       | Biome lint + format check       |
+| `npm run check:fix`   | Biome fix all                   |
+
+
