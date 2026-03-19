@@ -1,5 +1,14 @@
 {
-	"name": "nextjs-tailwind-shadcn-tanstackquery-trpc-biome-starter-template",
+	"name": "google-docs-clone",
+	"description": "Google Docs Clone",
+	"author": "Chinmaya Bisoi",
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/ChinmayaBisoi/google-docs-clone.git"
+	},
+	"homepage": "https://github.com/ChinmayaBisoi/google-docs-clone",
+	"keywords": ["google-docs-clone", "google-docs", "docs","google","clone"],
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
