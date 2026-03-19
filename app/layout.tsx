@@ -1,3 +1,4 @@
+import { ThemeInitScript } from "@/components/ThemeInitScript";
 import { TRPCReactProvider } from "@/trpc/client";
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
@@ -25,15 +26,10 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang="en" suppressHydrationWarning>
 			<head>
-				<script
-					async
-					crossOrigin="anonymous"
-					src="https://tweakcn.com/live-preview.min.js"
-				/>
+				<ThemeInitScript />
 			</head>
-
 			<body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
 				<ClerkProvider>
 					<TRPCReactProvider>{children}</TRPCReactProvider>

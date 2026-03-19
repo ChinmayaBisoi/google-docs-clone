@@ -3,6 +3,7 @@
 import { Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 export function Navbar() {
 	return (
@@ -21,6 +22,7 @@ export function Navbar() {
 			</div>
 
 			<div className="flex items-center gap-1">
+				<ThemeSwitcher />
 				<Button variant="ghost" size="icon" aria-label="Apps">
 					<AppsGridIcon />
 				</Button>
