@@ -39,10 +39,10 @@ function OwnedByFilter() {
 	return (
 		<button
 			type="button"
-			className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent"
+			className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 		>
 			Owned by anyone
-			<svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+			<svg className="size-4 text-current" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
 				<title>Expand</title>
 				<path d="M7 10l5 5 5-5z" />
 			</svg>
@@ -54,7 +54,7 @@ function SortButton() {
 	return (
 		<button
 			type="button"
-			className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent"
+			className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 		>
 			Last opened by me
 			<svg className="size-4" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
@@ -69,7 +69,7 @@ function ViewToggle() {
 	return (
 		<Button variant="ghost" size="icon" aria-label="Toggle view">
 			<svg
-				className="size-5 text-muted-foreground"
+				className="size-5"
 				viewBox="0 0 24 24"
 				fill="currentColor"
 				aria-hidden="true"
