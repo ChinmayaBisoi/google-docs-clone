@@ -1,6 +1,6 @@
 "use client";
 
-import { Plus } from "lucide-react";
+import { BlankDocumentCard } from "@/components/documents/BlankDocumentCard";
 
 export function NewDocumentSection() {
 	return (
@@ -14,16 +14,5 @@ export function NewDocumentSection() {
 				</div>
 			</div>
 		</section>
-	);
-}
-
-function BlankDocumentCard() {
-	return (
-		<button type="button" className="group flex flex-col gap-2">
-			<div className="flex h-[194px] w-[150px] cursor-pointer items-center justify-center rounded-sm border border-border bg-background transition-colors hover:border-primary">
-				<Plus className="size-12 text-primary" />
-			</div>
-			<span className="text-sm font-medium text-foreground">Blank document</span>
-		</button>
 	);
 }

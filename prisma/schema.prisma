@@ -8,10 +8,23 @@ datasource db {
 }
 
 model User {
-	id        String   @id @default(cuid())
-	clerkId   String   @unique
+	id        String     @id @default(cuid())
+	clerkId   String     @unique
 	email     String?
 	name      String?
+	createdAt DateTime   @default(now())
+	updatedAt DateTime   @updatedAt
+	documents Document[]
+}
+
+model Document {
+	id        String   @id @default(cuid())
+	title     String   @default("Untitled document")
+	content   String   @default("")
+	userId    String
+	user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 	createdAt DateTime @default(now())
 	updatedAt DateTime @updatedAt
+
+	@@index([userId])
 }

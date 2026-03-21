@@ -14,6 +14,7 @@ function getDatabaseUrl(): string {
 				: "DATABASE_URL must be set",
 		);
 	}
+	console.log("url", url);
 	return url;
 }
 

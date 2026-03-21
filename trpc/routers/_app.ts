@@ -1,6 +1,7 @@
 import { getSql } from "@/lib/db";
 import { z } from "zod";
 import { baseProcedure, createTRPCRouter } from "../init";
+import { documentRouter } from "./document";
 import { userRouter } from "./user";
 
 export const appRouter = createTRPCRouter({
@@ -17,6 +18,7 @@ export const appRouter = createTRPCRouter({
 		return { ok: true };
 	}),
 	user: userRouter,
+	document: documentRouter,
 });
 
 export type AppRouter = typeof appRouter;
