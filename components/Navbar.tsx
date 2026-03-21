@@ -1,6 +1,7 @@
 "use client";
 
 import { Menu, Search } from "lucide-react";
+import { NavbarUserMenu } from "@/components/auth/NavbarUserMenu";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
@@ -23,10 +24,7 @@ export function Navbar() {
 
 			<div className="flex items-center gap-1">
 				<ThemeSwitcher />
-				<Button variant="ghost" size="icon" aria-label="Apps">
-					<AppsGridIcon />
-				</Button>
-				<UserAvatar />
+				<NavbarUserMenu />
 			</div>
 		</header>
 	);
@@ -42,33 +40,5 @@ function SearchBar() {
 				className="h-full flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground"
 			/>
 		</div>
-	);
-}
-
-
-
-function AppsGridIcon() {
-	return (
-		<svg
-			className="size-5 text-current"
-			viewBox="0 0 24 24"
-			fill="currentColor"
-			aria-hidden="true"
-		>
-			<title>Apps</title>
-			<path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z" />
-		</svg>
-	);
-}
-
-function UserAvatar() {
-	return (
-		<button
-			type="button"
-			className="ml-1 flex size-9 items-center justify-center rounded-full bg-primary text-sm font-medium text-primary-foreground"
-			aria-label="Account"
-		>
-			U
-		</button>
 	);
 }

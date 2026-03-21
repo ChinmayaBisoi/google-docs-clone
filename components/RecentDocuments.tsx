@@ -22,7 +22,6 @@ export function RecentDocuments({ documents = [] }: RecentDocumentsProps) {
 				<div className="flex items-center gap-2">
 					<OwnedByFilter />
 					<SortButton />
-					<ViewToggle />
 				</div>
 			</div>
 
@@ -62,22 +61,6 @@ function SortButton() {
 				<path d="M7 10l5 5 5-5z" />
 			</svg>
 		</button>
-	);
-}
-
-function ViewToggle() {
-	return (
-		<Button variant="ghost" size="icon" aria-label="Toggle view">
-			<svg
-				className="size-5"
-				viewBox="0 0 24 24"
-				fill="currentColor"
-				aria-hidden="true"
-			>
-				<title>List view</title>
-				<path d="M3 5h18v2H3V5zm0 6h18v2H3v-2zm0 6h18v2H3v-2z" />
-			</svg>
-		</Button>
 	);
 }
 

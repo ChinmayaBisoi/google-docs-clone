@@ -1,6 +1,7 @@
 import { getSql } from "@/lib/db";
 import { z } from "zod";
 import { baseProcedure, createTRPCRouter } from "../init";
+import { userRouter } from "./user";
 
 export const appRouter = createTRPCRouter({
 	hello: baseProcedure.input(z.object({ text: z.string() })).query((opts) => ({
@@ -15,6 +16,7 @@ export const appRouter = createTRPCRouter({
 		await ctx.prisma.$queryRaw`SELECT 1`;
 		return { ok: true };
 	}),
+	user: userRouter,
 });
 
 export type AppRouter = typeof appRouter;
