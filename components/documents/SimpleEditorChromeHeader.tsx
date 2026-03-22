@@ -1,6 +1,6 @@
 "use client";
 
-import { Logo, LogoLong } from "@/components/Logo";
+import { LogoLong } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { copyPageUrlToClipboard } from "@/lib/copy-page-url";
 import { cn } from "@/lib/utils";
@@ -31,6 +31,8 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 			if (docQuery.data) return docQuery.data.title;
 			return "Untitled document";
 		})();
+
+		const isOwner = docQuery.data?.isOwner ?? false;
 
 		const { starred, toggle } = usePersistedDocumentStar(documentId);
 
@@ -68,28 +70,29 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 									>
 										{displayTitle}
 									</div>
-									<Button
-										type="button"
-										variant="ghost"
-										size="icon-sm"
-										className={cn(
-											"shrink-0 text-[#5f6368] dark:text-muted-foreground",
-											starred && "text-amber-500 hover:text-amber-600 dark:text-amber-400"
-										)}
-										aria-label={starred ? "Remove from starred" : "Add to starred"}
-										aria-pressed={starred}
-										onClick={toggle}
-									>
-										<Star
-											className="size-5"
-											fill={starred ? "currentColor" : "none"}
-											strokeWidth={2}
-											aria-hidden
-										/>
-									</Button>
+									{isOwner && (
+										<Button
+											type="button"
+											variant="ghost"
+											size="icon-sm"
+											className={cn(
+												"shrink-0 text-[#5f6368] dark:text-muted-foreground",
+												starred && "text-amber-500 hover:text-amber-600 dark:text-amber-400"
+											)}
+											aria-label={starred ? "Remove from starred" : "Add to starred"}
+											aria-pressed={starred}
+											onClick={toggle}
+										>
+											<Star
+												className="size-5"
+												fill={starred ? "currentColor" : "none"}
+												strokeWidth={2}
+												aria-hidden
+											/>
+										</Button>
+									)}
 								</div>
 								<div className="min-w-0" aria-hidden />
-
 
 								<div className="flex min-w-0 justify-end justify-self-end">
 									<div className="flex shrink-0 items-center gap-2">
