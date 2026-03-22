@@ -50,9 +50,16 @@ body,
 }
 
 .simple-editor-wrapper {
+  --simple-editor-chrome-height: 64px;
   width: 100vw;
   height: 100vh;
   overflow: auto;
+
+  .tiptap-toolbar[data-variant="fixed"] {
+    @media screen and (min-width: 481px) {
+      top: var(--simple-editor-chrome-height);
+    }
+  }
 }
 
 .simple-editor-content {

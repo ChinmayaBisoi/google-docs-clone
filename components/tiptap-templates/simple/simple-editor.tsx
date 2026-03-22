@@ -1,7 +1,8 @@
 "use client";
 
 import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
-import { useEffect, useRef, useState } from "react";
+import type { CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 
 import { Highlight } from "@tiptap/extension-highlight";
 import { Image } from "@tiptap/extension-image";
@@ -39,7 +40,6 @@ import {
 } from "@/components/tiptap-ui/color-highlight-popover";
 // --- Tiptap UI ---
 import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu";
-import { ImageUploadButton } from "@/components/tiptap-ui/image-upload-button";
 import { LinkButton, LinkContent, LinkPopover } from "@/components/tiptap-ui/link-popover";
 import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu";
 import { MarkButton } from "@/components/tiptap-ui/mark-button";
@@ -56,9 +56,6 @@ import { useCursorVisibility } from "@/hooks/use-cursor-visibility";
 import { useIsBreakpoint } from "@/hooks/use-is-breakpoint";
 import { useWindowSize } from "@/hooks/use-window-size";
 
-// --- Components ---
-import { ThemeToggle } from "@/components/tiptap-templates/simple/theme-toggle";
-
 // --- Lib ---
 import { MAX_FILE_SIZE, handleImageUpload } from "@/lib/tiptap-utils";
 
@@ -66,6 +63,8 @@ import { MAX_FILE_SIZE, handleImageUpload } from "@/lib/tiptap-utils";
 import "@/components/tiptap-templates/simple/simple-editor.scss";
 
 import content from "@/components/tiptap-templates/simple/data/content.json";
+import type { SimpleEditorProps } from "@/components/tiptap-templates/simple/simple-editor-types";
+import { SimpleEditorChromeHeader } from "@/components/documents/SimpleEditorChromeHeader";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const MainToolbarContent = ({
@@ -170,11 +169,13 @@ const MobileToolbarContent = ({
 	</>
 );
 
-export function SimpleEditor() {
+export function SimpleEditor({ documentId }: SimpleEditorProps) {
 	const isMobile = useIsBreakpoint();
 	const { height } = useWindowSize();
 	const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">("main");
+	const chromeRef = useRef<HTMLDivElement>(null);
 	const toolbarRef = useRef<HTMLDivElement>(null);
+	const [chromeHeightPx, setChromeHeightPx] = useState(64);
 
 	const editor = useEditor({
 		immediatelyRender: false,
@@ -216,9 +217,13 @@ export function SimpleEditor() {
 		content,
 	});
 
+	const chromeH = chromeRef.current?.getBoundingClientRect().height ?? 0;
+	const toolbarH = toolbarRef.current?.getBoundingClientRect().height ?? 0;
+	const overlayHeight = isMobile ? toolbarH : chromeH + toolbarH;
+
 	const rect = useCursorVisibility({
 		editor,
-		overlayHeight: toolbarRef.current?.getBoundingClientRect().height ?? 0,
+		overlayHeight,
 	});
 
 	useEffect(() => {
@@ -227,8 +232,26 @@ export function SimpleEditor() {
 		}
 	}, [isMobile, mobileView]);
 
+	useLayoutEffect(() => {
+		const el = chromeRef.current;
+		if (!el) return;
+		const sync = () => setChromeHeightPx(el.offsetHeight);
+		sync();
+		const ro = new ResizeObserver(sync);
+		ro.observe(el);
+		return () => ro.disconnect();
+	}, []);
+
 	return (
-		<div className="simple-editor-wrapper">
+		<div
+			className="simple-editor-wrapper"
+			style={
+				{
+					"--simple-editor-chrome-height": `${chromeHeightPx}px`,
+				} as CSSProperties
+			}
+		>
+			<SimpleEditorChromeHeader ref={chromeRef} documentId={documentId} />
 			<EditorContext.Provider value={{ editor }}>
 				<Toolbar
 					ref={toolbarRef}

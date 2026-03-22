@@ -13,5 +13,5 @@ export default async function DocumentPage({
 	}
 	const { documentId } = await params;
 
-	return <SimpleEditor />
+	return <SimpleEditor documentId={documentId} />
 }
