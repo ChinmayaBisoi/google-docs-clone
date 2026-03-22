@@ -4,6 +4,22 @@ Google Docs–style editing: one shared document, multiple people typing togethe
 
 This is the hardest slice of the product. Scope tightly; ship sync first, polish second.
 
+## Implementation status (this repo)
+
+The stack below is **implemented**. Operational runbook (env, scripts, Docker) lives in the root **[README.md](../README.md)** under **Realtime collaboration (Hocuspocus)**.
+
+| Concern | Where it lives |
+| ------- | -------------- |
+| Editor UI | [`components/tiptap-templates/simple/simple-editor.tsx`](../components/tiptap-templates/simple/simple-editor.tsx), [`SimpleEditorCollaborativePane.tsx`](../components/tiptap-templates/simple/SimpleEditorCollaborativePane.tsx) |
+| Yjs + IndexedDB + provider | [`hooks/useCollaborativeYjs.ts`](../hooks/useCollaborativeYjs.ts) |
+| Collab JWT (tRPC) | [`lib/collab-jwt.ts`](../lib/collab-jwt.ts), [`trpc/routers/document.ts`](../trpc/routers/document.ts) (`getCollabToken`, `getById` with `isOwner`, `updateTitle`) |
+| Hocuspocus server | [`server/hocuspocus.ts`](../server/hocuspocus.ts), [`Dockerfile.collab`](../Dockerfile.collab) |
+| Durability | Postgres `Document.yjsState` (server), `y-indexeddb` per `documentId` (browser) |
+| Shareable route | [`app/documents/[documentId]/page.tsx`](../app/documents/[documentId]/page.tsx) |
+| Owner vs guest UI | [`components/documents/SimpleEditorChromeHeader.tsx`](../components/documents/SimpleEditorChromeHeader.tsx) (star hidden for non-owners; title rename UI not wired yet) |
+
+**Sharing model:** Any **signed-in** user who knows the document URL can open the doc (`document.getById`). The **owner** can star the doc and may rename the title via `updateTitle` when the UI calls it. **Guests** (non-owners) can edit body content but cannot star or change the title through the API as implemented.
+
 ## Goals
 
 | Area | Requirement |
@@ -23,16 +39,16 @@ This is the hardest slice of the product. Scope tightly; ship sync first, polish
 | CRDT / sync | **Yjs** |
 | Transport | **Hocuspocus** or the simplest Yjs provider that fits the app |
 
-Persistence (Postgres, file store, or provider persistence) is **optional** if real-time sync is solid. Add it when it is cheap to wire up; do not block on it.
+**Persistence in production:** Server-side debounced save of Yjs state to **Postgres** (`yjsState`). Client-side **IndexedDB** (`y-indexeddb`) supports offline-first editing and faster reloads; reconnect syncs via the WebSocket.
 
-## Implementation order
+## Implementation order (original plan)
 
-1. Tiptap in the UI with the extensions you need (paragraph, heading, bullet list).
-2. Yjs document bound to the editor.
-3. A minimal WebSocket (or provider) layer so **two browser tabs** on the same room id show the same content.
-4. Presence (enough to see “someone else is here”; full cursor parity is nice but not required for v1).
-5. Autosave: debounced persist or provider snapshot, depending on what you picked.
-6. Route shape: `/docs/[id]` (or `/room/[id]`) so the URL is the shareable link.
+1. Tiptap in the UI with the extensions you need (paragraph, heading, bullet list). **Done** (see `SimpleEditorCollaborativePane`).
+2. Yjs document bound to the editor. **Done** (`Collaboration` extension + shared `Y.Doc`).
+3. A minimal WebSocket (or provider) layer so **two browser tabs** on the same room id show the same content. **Done** (`HocuspocusProvider`, room name = `documentId`).
+4. Presence (enough to see “someone else is here”; full cursor parity is nice but not required for v1). **Done** (`CollaborationCursor` + awareness).
+5. Autosave: debounced persist or provider snapshot, depending on what you picked. **Done** (Hocuspocus `onStoreDocument` → Prisma; IndexedDB on client).
+6. Route shape: `/docs/[id]` (or `/room/[id]`) so the URL is the shareable link. **This app uses** `/documents/[documentId]`.
 
 Start from the smallest official Tiptap + Yjs example, then adapt to this repo (App Router, tRPC for non-editor concerns if needed).
 
@@ -70,3 +86,11 @@ A single route that includes:
 - **Shareable link** (copy URL or obvious deep link to the same doc id)
 
 That is the bar for “real-time collaborative editor” in this product.
+
+## Keeping this doc up to date
+
+When you change collaboration behavior (new env vars, new routes, persistence format, or sharing rules), update:
+
+1. This file (`docs/realtime-collaborative-editor.md`) for **product and architecture** intent.
+2. [`README.md`](../README.md) for **how to run** (commands, env, Docker).
+3. [`.env.example`](../.env.example) whenever new variables are required.

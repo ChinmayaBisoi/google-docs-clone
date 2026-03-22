@@ -68,6 +68,8 @@ LOCAL_DATABASE_URL="postgresql://$USER@localhost:5432/app_dev"
 
 ## Realtime collaboration (Hocuspocus)
 
+Product goals, file map, and sharing rules: **[docs/realtime-collaborative-editor.md](docs/realtime-collaborative-editor.md)** (keep that doc in sync when you change collab behavior).
+
 The app uses **Yjs** plus a standalone **Hocuspocus** WebSocket server for multi-user editing. **Postgres** stores the serialized Yjs state (`Document.yjsState`). The browser also uses **IndexedDB** (`y-indexeddb`) for offline-first local persistence.
 
 ### Env
