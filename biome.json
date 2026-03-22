@@ -20,7 +20,18 @@
 				"useImportType": "warn"
 			},
 			"suspicious": { "noExplicitAny": "warn" }
-		}
+		},
+		"ignore": [
+			"next-env.d.ts",
+			"node_modules",
+			"build",
+			"dist",
+			"out",
+			"public",
+			"styles",
+			"types",
+			"/*tiptap*/**/*"
+		]
 	},
 	"javascript": {
 		"formatter": {
