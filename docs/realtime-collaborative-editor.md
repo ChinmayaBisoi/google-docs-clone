@@ -14,7 +14,7 @@ The stack below is **implemented**. Operational runbook (env, scripts, Docker) l
 | Yjs + IndexedDB + provider | [`hooks/useCollaborativeYjs.ts`](../hooks/useCollaborativeYjs.ts) |
 | Collab JWT (tRPC) | [`lib/collab-jwt.ts`](../lib/collab-jwt.ts), [`trpc/routers/document.ts`](../trpc/routers/document.ts) (`getCollabToken`, `getById` with `isOwner`, `updateTitle`) |
 | Hocuspocus server | [`server/hocuspocus.ts`](../server/hocuspocus.ts), [`Dockerfile.collab`](../Dockerfile.collab) |
-| Durability | Postgres `Document.yjsState` (server), `y-indexeddb` per `documentId` (browser) |
+| Durability | Postgres `Document.yjsState` only (legacy `Document.content` removed). Client: `y-indexeddb` per `documentId`. |
 | Shareable route | [`app/documents/[documentId]/page.tsx`](../app/documents/[documentId]/page.tsx) |
 | Owner vs guest UI | [`components/documents/SimpleEditorChromeHeader.tsx`](../components/documents/SimpleEditorChromeHeader.tsx) (star hidden for non-owners; title rename UI not wired yet) |
 

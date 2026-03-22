@@ -1,5 +1,5 @@
-import { signCollabToken } from "@/lib/collab-jwt";
 import { syncClerkUser } from "@/lib/clerk-user";
+import { signCollabToken } from "@/lib/collab-jwt";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "../init";
@@ -39,7 +39,6 @@ export const documentRouter = createTRPCRouter({
 		return {
 			id: doc.id,
 			title: doc.title,
-			content: doc.content,
 			createdAt: doc.createdAt,
 			updatedAt: doc.updatedAt,
 			isOwner: doc.userId === user.id,
@@ -77,7 +76,7 @@ export const documentRouter = createTRPCRouter({
 			z.object({
 				id: z.string(),
 				title: z.string().min(1).max(200),
-			}),
+			})
 		)
 		.mutation(async ({ ctx, input }) => {
 			const user = await syncClerkUser(ctx.prisma);

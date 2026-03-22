@@ -33,5 +33,5 @@ export function DocumentEditorRoute({ documentId }: DocumentEditorRouteProps) {
 		);
 	}
 
-	return <DocumentEditorShell title={query.data.title} initialPlainText={query.data.content} />;
+	return <DocumentEditorShell title={query.data.title} initialPlainText="" />;
 }

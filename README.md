@@ -211,12 +211,12 @@ That template uses `useEditor({ immediatelyRender: false })` so ProseMirror moun
 
 ### Product editor (`DocumentEditorRoute`)
 
-Returning `DocumentEditorRoute` with a server-loaded document (for example `createTRPCCaller` + `document.getById`, serialized payload as `initialDocument`) connects the route to Prisma-backed docs and the Google-docs-style shell. Passing `initialData` on the client query avoids a full-page loading spinner on refresh. `DocumentEditorCanvas` uses `useLayoutEffect` so body content is painted in the same frame as the shell when possible.
+Alternate shell that loads the **title** from `document.getById`. Document **body** is not stored in Postgres as plain text anymore; it lives in **Yjs** (`yjsState` + IndexedDB). This route does not wire TipTap or Yjs, so the canvas starts empty unless you extend it.
 
 ### Moving forward
 
-- Use **SimpleEditor** when the priority is TipTap UX and you accept client-only editor mount.
-- Use **DocumentEditorRoute** when the priority is real documents, auth, and minimal loading flash.
+- Use **SimpleEditor** for real-time collaboration (TipTap + Yjs + Hocuspocus). That is the production path for document body.
+- Use **DocumentEditorRoute** only if you still want the older contenteditable shell for experiments; it does not sync to `yjsState`.
 - Switching between them is a deliberate edit to `page.tsx`, not leftover dead code.
 
 ---

@@ -20,7 +20,6 @@ model User {
 model Document {
 	id        String   @id @default(cuid())
 	title     String   @default("Untitled document")
-	content   String   @default("")
 	yjsState  Bytes?
 	userId    String
 	user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
