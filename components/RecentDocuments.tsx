@@ -1,20 +1,75 @@
 "use client";
 
+import type { ReactNode } from "react";
+
+import { SignInModal } from "@/components/auth/SignInModal";
+import type { RecentDocumentListItem } from "@/components/recent-documents-types";
 import { Button } from "@/components/ui/button";
+import { formatRelativeTime } from "@/lib/format-relative-time";
+import { useTRPC } from "@/trpc/client";
+import { useUser } from "@clerk/nextjs";
+import { useQuery } from "@tanstack/react-query";
 import { EllipsisVertical, FileText } from "lucide-react";
+import Link from "next/link";
 
-interface DocumentItem {
-	id: string;
-	title: string;
-	lastOpened: string;
-	owner: string;
-}
+export function RecentDocuments() {
+	const { isLoaded, isSignedIn } = useUser();
+	const trpc = useTRPC();
+	const listQuery = useQuery({
+		...trpc.document.list.queryOptions(),
+		enabled: isLoaded && isSignedIn,
+	});
 
-interface RecentDocumentsProps {
-	documents?: DocumentItem[];
-}
+	const documents: RecentDocumentListItem[] = (listQuery.data ?? []).map((d) => ({
+		id: d.id,
+		title: d.title,
+		lastOpened: formatRelativeTime(d.updatedAt),
+		owner: d.user.name ?? d.user.email ?? "You",
+	}));
 
-export function RecentDocuments({ documents = [] }: RecentDocumentsProps) {
+	let body: ReactNode;
+
+	if (!isLoaded) {
+		body = <RecentDocumentsSkeleton />;
+	} else if (!isSignedIn) {
+		body = (
+			<EmptyState
+				title="Sign in to see recent documents"
+				description="Your documents will show up here after you sign in."
+				action={
+					<SignInModal>
+						<Button type="button" size="sm" className="mt-4">
+							Sign in
+						</Button>
+					</SignInModal>
+				}
+			/>
+		);
+	} else if (listQuery.isPending) {
+		body = <RecentDocumentsSkeleton />;
+	} else if (listQuery.isError) {
+		body = (
+			<div className="flex flex-col items-center justify-center py-24 text-center">
+				<p className="max-w-sm text-sm text-muted-foreground">
+					We could not load your documents. Try again.
+				</p>
+				<Button
+					type="button"
+					variant="secondary"
+					size="sm"
+					className="mt-4"
+					onClick={() => void listQuery.refetch()}
+				>
+					Retry
+				</Button>
+			</div>
+		);
+	} else if (documents.length > 0) {
+		body = <DocumentList documents={documents} />;
+	} else {
+		body = <EmptyState title="No documents yet" />;
+	}
+
 	return (
 		<section className="mx-auto w-full max-w-[900px] px-6 py-6">
 			<div className="flex items-center justify-between">
@@ -25,8 +80,24 @@ export function RecentDocuments({ documents = [] }: RecentDocumentsProps) {
 				</div>
 			</div>
 
-			{documents.length > 0 ? <DocumentList documents={documents} /> : <EmptyState />}
+			{body}
 		</section>
+	);
+}
+
+function RecentDocumentsSkeleton() {
+	return (
+		<div className="mt-2 space-y-2" aria-busy="true" aria-label="Loading documents">
+			{(["s1", "s2", "s3", "s4"] as const).map((id) => (
+				<div key={id} className="flex items-center gap-4 rounded-lg px-3 py-2.5">
+					<div className="size-6 shrink-0 animate-pulse rounded bg-muted" />
+					<div className="h-4 flex-1 animate-pulse rounded bg-muted" />
+					<div className="h-3 w-16 shrink-0 animate-pulse rounded bg-muted" />
+					<div className="h-3 w-14 shrink-0 animate-pulse rounded bg-muted" />
+					<div className="size-8 shrink-0" />
+				</div>
+			))}
+		</div>
 	);
 }
 
@@ -65,7 +136,7 @@ function SortButton() {
 	);
 }
 
-function DocumentList({ documents }: { documents: DocumentItem[] }) {
+function DocumentList({ documents }: { documents: RecentDocumentListItem[] }) {
 	return (
 		<div className="mt-2">
 			{documents.map((doc) => (
@@ -75,18 +146,33 @@ function DocumentList({ documents }: { documents: DocumentItem[] }) {
 	);
 }
 
-function DocumentRow({ document }: { document: DocumentItem }) {
+function DocumentRow({ document }: { document: RecentDocumentListItem }) {
 	return (
-		<div className="group flex cursor-pointer items-center gap-4 rounded-lg px-3 py-2.5 hover:bg-accent/50">
-			<FileText className="size-6 shrink-0 text-primary" />
-			<span className="flex-1 truncate text-sm font-medium text-foreground">{document.title}</span>
-			<span className="text-xs text-muted-foreground">{document.owner}</span>
-			<span className="text-xs text-muted-foreground">{document.lastOpened}</span>
+		<div className="group flex items-center gap-1 rounded-lg py-2.5 pr-1 hover:bg-accent/50 sm:gap-4 sm:px-3">
+			<Link
+				href={`/documents/${document.id}`}
+				className="flex min-w-0 flex-1 items-center gap-3 px-3 sm:gap-4 sm:px-0"
+			>
+				<FileText className="size-6 shrink-0 text-primary" aria-hidden />
+				<span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
+					<span className="truncate text-sm font-medium text-foreground">{document.title}</span>
+					<span className="truncate text-xs text-muted-foreground sm:hidden">
+						{document.lastOpened}
+					</span>
+					<span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
+						{document.owner}
+					</span>
+					<span className="hidden shrink-0 text-xs text-muted-foreground sm:inline">
+						{document.lastOpened}
+					</span>
+				</span>
+			</Link>
 			<Button
 				variant="ghost"
 				size="icon-sm"
-				className="opacity-0 group-hover:opacity-100"
+				className="shrink-0 opacity-0 group-hover:opacity-100"
 				aria-label="More actions"
+				type="button"
 			>
 				<EllipsisVertical className="size-4" />
 			</Button>
@@ -94,11 +180,23 @@ function DocumentRow({ document }: { document: DocumentItem }) {
 	);
 }
 
-function EmptyState() {
+function EmptyState({
+	title,
+	description,
+	action,
+}: {
+	title: string;
+	description?: string;
+	action?: ReactNode;
+}) {
 	return (
 		<div className="flex flex-col items-center justify-center py-40">
-			<FileText className="mb-4 size-16 text-muted-foreground/40" />
-			<p className="text-sm font-medium text-muted-foreground">No documents yet</p>
+			<FileText className="mb-4 size-16 text-muted-foreground/40" aria-hidden />
+			<p className="text-sm font-medium text-muted-foreground">{title}</p>
+			{description ? (
+				<p className="mt-1 max-w-sm text-center text-xs text-muted-foreground">{description}</p>
+			) : null}
+			{action}
 		</div>
 	);
 }
