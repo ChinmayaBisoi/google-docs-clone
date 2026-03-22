@@ -1,22 +1,14 @@
 "use client";
 
-import { Logo } from "@/components/Logo";
+import { Logo, LogoLong } from "@/components/Logo";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { NavbarUserMenu } from "@/components/auth/NavbarUserMenu";
-import { Button } from "@/components/ui/button";
-import { Menu, Search } from "lucide-react";
+import { Search } from "lucide-react";
 
 export function Navbar() {
 	return (
 		<header className="sticky top-0 z-50 flex h-16 items-center gap-2 bg-background px-2 md:px-4">
-			<Button variant="ghost" size="icon" aria-label="Main menu">
-				<Menu className="size-5" />
-			</Button>
-
-			<div className="flex items-center gap-2">
-				<Logo />
-				<span className="text-[22px] text-muted-foreground">Docs</span>
-			</div>
+			<LogoLong />
 
 			<div className="flex flex-1 items-center">
 				<SearchBar />

@@ -20,3 +20,12 @@ export function Logo() {
 		</svg>
 	);
 }
+
+export function LogoLong() {
+	return (
+		<div className="flex items-center gap-2">
+			<Logo />
+			<span className="text-[22px] text-muted-foreground">Docs</span>
+		</div>
+	);
+}

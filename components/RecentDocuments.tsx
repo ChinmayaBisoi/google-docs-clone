@@ -5,11 +5,12 @@ import type { ReactNode } from "react";
 import { SignInModal } from "@/components/auth/SignInModal";
 import type { RecentDocumentListItem } from "@/components/recent-documents-types";
 import { Button } from "@/components/ui/button";
+import { copyDocumentUrlToClipboard } from "@/lib/copy-page-url";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import { useTRPC } from "@/trpc/client";
 import { useUser } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
-import { EllipsisVertical, FileText } from "lucide-react";
+import { FileText, Share2 } from "lucide-react";
 import Link from "next/link";
 
 export function RecentDocuments() {
@@ -168,13 +169,14 @@ function DocumentRow({ document }: { document: RecentDocumentListItem }) {
 				</span>
 			</Link>
 			<Button
-				variant="ghost"
-				size="icon-sm"
-				className="shrink-0 opacity-0 group-hover:opacity-100"
-				aria-label="More actions"
 				type="button"
+				size="sm"
+				className="shrink-0 rounded-full bg-[#1a73e8] px-4 text-white opacity-0 hover:bg-[#1557b0] group-hover:opacity-100 dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+				aria-label="Copy link to share"
+				onClick={() => void copyDocumentUrlToClipboard(document.id)}
 			>
-				<EllipsisVertical className="size-4" />
+				<Share2 className="size-4 sm:mr-1" aria-hidden />
+				<span className="hidden sm:inline">Share</span>
 			</Button>
 		</div>
 	);

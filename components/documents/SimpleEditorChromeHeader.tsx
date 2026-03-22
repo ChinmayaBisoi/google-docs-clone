@@ -1,11 +1,11 @@
 "use client";
 
-import { Logo } from "@/components/Logo";
+import { Logo, LogoLong } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { copyPageUrlToClipboard } from "@/lib/copy-page-url";
 import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
-import { UserButton, useAuth } from "@clerk/nextjs";
+import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
 import { Share2, Star } from "lucide-react";
 import Link from "next/link";
@@ -42,33 +42,28 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 			<div
 				ref={ref}
 				id="docs-chrome"
-				className="sticky top-0 z-60 shrink-0 border-b border-[#dadce0] bg-white dark:border-border dark:bg-card"
+				className="sticky top-0 z-50 bg-background shrink-0 border-b border-[#dadce0] dark:border-border dark:bg-card"
 			>
 				<div id="docs-header-container" className="w-full">
 					<div id="docs-header" className="flex min-h-16 items-stretch">
 						<div
 							id="docs-branding-container"
-							className="flex w-16 shrink-0 items-center justify-center border-r border-transparent dark:border-transparent"
+							className="flex shrink-0 ml-2 items-center justify-center border-r border-transparent px-1 sm:px-2 dark:border-transparent"
 						>
-							<Button
-								variant="ghost"
-								size="icon-lg"
-								className="size-14 shrink-0 rounded-md"
-								aria-label="Docs home"
-								asChild
-							>
-								<Link href="/">
-									<Logo />
-								</Link>
-							</Button>
+							<Link href="/">
+								<LogoLong />
+							</Link>
 						</div>
-
-						<div className="flex min-w-0 flex-1 items-center gap-2 px-2 py-1 sm:px-3">
-							<div id="docs-titlebar-container" className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-								<div className="flex min-w-0 items-center gap-1">
+						<div className="w-0.5 h-8 my-auto bg-border" />
+						<div className="flex min-w-0 flex-1 items-center px-2 py-1 sm:px-3">
+							<div className="grid min-w-0 flex-1 grid-cols-[1fr_minmax(0,1fr)_1fr] items-center gap-2">
+								<div
+									id="docs-titlebar-container"
+									className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden"
+								>
 									<div
 										id="docs-titlebar"
-										className="truncate text-base font-normal text-[#202124] dark:text-foreground"
+										className="min-w-0 truncate text-center text-base font-normal text-[#202124] dark:text-foreground"
 										title={displayTitle}
 									>
 										{displayTitle}
@@ -93,25 +88,26 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 										/>
 									</Button>
 								</div>
-								<div className="hidden text-xs text-[#5f6368] dark:text-muted-foreground sm:block">
-									<span className="truncate">In My Documents</span>
-								</div>
-							</div>
+								<div className="min-w-0" aria-hidden />
 
-							<div className="flex shrink-0 items-center gap-2">
-								<Button
-									type="button"
-									size="sm"
-									className="rounded-full bg-[#1a73e8] px-4 text-white hover:bg-[#1557b0] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
-									aria-label="Copy link to this page"
-									onClick={() => void copyPageUrlToClipboard()}
-								>
-									<Share2 className="size-4 sm:mr-1" aria-hidden />
-									<span className="hidden sm:inline">Share</span>
-								</Button>
-								<div className="flex items-center gap-1">
-									<ThemeSwitcher />
-									<NavbarUserMenu />
+
+								<div className="flex min-w-0 justify-end justify-self-end">
+									<div className="flex shrink-0 items-center gap-2">
+										<Button
+											type="button"
+											size="sm"
+											className="rounded-full bg-[#1a73e8] px-4 text-white hover:bg-[#1557b0] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+											aria-label="Copy link to this page"
+											onClick={() => void copyPageUrlToClipboard()}
+										>
+											<Share2 className="size-4 sm:mr-1" aria-hidden />
+											<span className="hidden sm:inline">Share</span>
+										</Button>
+										<div className="flex items-center gap-1">
+											<ThemeSwitcher />
+											<NavbarUserMenu />
+										</div>
+									</div>
 								</div>
 							</div>
 						</div>
