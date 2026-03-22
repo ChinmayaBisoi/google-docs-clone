@@ -1,9 +1,9 @@
 import { createTRPCContext } from "@/trpc/init";
 import { appRouter } from "@/trpc/routers/_app";
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 import { TRPCError } from "@trpc/server";
+import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-/** Prisma + Clerk require the Node.js runtime (WASM + TCP/fetch to Neon). */
+/** Prisma + Clerk require the Node.js runtime (WASM + TCP to Postgres). */
 export const runtime = "nodejs";
 
 const handler = (req: Request) =>

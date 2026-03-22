@@ -11,7 +11,7 @@ Overview of the starter template configuration and how each piece works.
 | Styling        | Tailwind CSS v4                                                |
 | UI Components  | shadcn/ui (Base UI)                                            |
 | API / Data     | tRPC v11 + TanStack React Query v5                             |
-| Database       | PostgreSQL + Prisma 7 (Neon adapter for Prisma; serverless driver for raw SQL in `lib/db.ts`) |
+| Database       | PostgreSQL + Prisma 7 (`pg` + `@prisma/adapter-pg`; raw SQL in `lib/db.ts` uses the same driver) |
 | Auth           | Clerk                                                          |
 | Linting/Format | Biome                                                          |
 
@@ -20,21 +20,20 @@ Overview of the starter template configuration and how each piece works.
 
 ## Database
 
-### Production (Neon)
+### Production (Supabase)
 
-- **Raw SQL (`lib/db.ts`):** `@neondatabase/serverless` (`getSql()`).
-- **Prisma (`lib/prisma.ts`):** `@prisma/adapter-neon` **`PrismaNeonHttp`** and your **`DATABASE_URL`**. Use Neon’s **pooled** URL (hostname contains `-pooler`) for the deployed Next.js app. Pooled URLs are not compatible with `node-pg` + `@prisma/adapter-pg` in serverless.
+- **Raw SQL (`lib/db.ts`):** singleton **`pg.Client`** and a tagged-template helper (`getSql()`).
+- **Prisma (`lib/prisma.ts`):** **`PrismaPg({ connectionString: DATABASE_URL })`**. No app-owned **`pg.Pool`**. On Supabase, use the **transaction pooler** (port **6543**) for the deployed Next.js app and add **`?pgbouncer=true`** for Prisma with PgBouncer.
 
 ### Development (Local Postgres)
 
-- **Config:** `LOCAL_DATABASE_URL` is used when `NODE_ENV === "development"` (for `getSql()`)
-- If `LOCAL_DATABASE_URL` is unset, it falls back to `DATABASE_URL`
+- **Config:** set **`DATABASE_URL`** to your local Postgres URL (Prisma, `getSql()`, collab).
 
 ### Prisma ORM
 
-- **Runtime:** `DATABASE_URL` only for the app (no `LOCAL_DATABASE_URL`). Local dev: set `DATABASE_URL` to your local Postgres URL.
-- **Client:** `lib/prisma.ts` exports a singleton `PrismaClient` with **`PrismaNeonHttp`** (HTTPS to Neon, no WebSockets). Interactive `prisma.$transaction(async (tx) => …)` is not supported by this driver; array/batch `$transaction([…])` for single statements may still work for simple cases.
-- **CLI (`prisma.config.ts`):** Uses `DIRECT_URL` when set (Neon’s **direct**, non-pooler URL) for `migrate`, `db push`, etc. If `DIRECT_URL` is unset, the CLI falls back to `DATABASE_URL` (fine for local Postgres).
+- **Runtime:** **`DATABASE_URL`** in every environment.
+- **Client:** `lib/prisma.ts` passes **`PoolConfig`** into **`PrismaPg`** (Prisma owns the driver). Interactive `prisma.$transaction(async (tx) => …)` is supported.
+- **CLI (`prisma.config.ts`):** Uses `DIRECT_URL` when set (Supabase **direct** host, port **5432**, or session pooler) for `migrate`, `db push`, etc. If `DIRECT_URL` is unset, the CLI falls back to `DATABASE_URL` (fine for local Postgres).
 - **tRPC:** `ctx.prisma` in all procedures. Use `prismaHealth` in `_app.ts` to verify DB connectivity from the app.
 - **Migrations:** Run `npm run db:migrate` after schema changes. Use `db:push` for quick prototyping without migration files.
 
@@ -62,7 +61,7 @@ PGHOST=127.0.0.1 PGPORT=5433 npm run db:create
 Then in `.env.local`:
 
 ```
-LOCAL_DATABASE_URL="postgresql://$USER@localhost:5432/app_dev"
+DATABASE_URL="postgresql://$USER@localhost:5432/app_dev"
 ```
 
 ---
@@ -75,23 +74,22 @@ Use this checklist when deploying the Next.js app (for example [Vercel](https://
 
 1. **Build command:** `npm run build` (default on most hosts). **Output:** Next.js.
 2. **Install:** `npm install` (postinstall runs `prisma generate`).
-3. **Node:** Use **Node 20+** on the host. `lib/prisma.ts` uses **`PrismaNeonHttp`**: Neon’s **SQL over HTTPS** path (plain `fetch`), which is reliable on Vercel. It avoids WebSocket + `ws`, which can fail in serverless even when `next start` works locally.
+3. **Node:** Use **Node 20+** on the host. `lib/prisma.ts` uses **`pg`** against Supabase’s pooler (or direct Postgres).
 4. **Environment variables** (minimum):
-   - **`DATABASE_URL`:** Neon **pooled** URL from the Neon dashboard (hostname includes `-pooler`). The app’s Prisma client expects this for serverless.
-   - **`DIRECT_URL`** (recommended for Neon): **Direct** URL (no `-pooler`) for Prisma CLI only. Add it if you run `prisma migrate deploy` / `db push` from CI against Neon; `prisma.config.ts` prefers `DIRECT_URL` over `DATABASE_URL` for those commands. Optional if your CLI always uses a direct connection another way.
+   - **`DATABASE_URL`:** Supabase **transaction pooler** URL (port **6543**) with **`?pgbouncer=true`**. From [Supabase](https://supabase.com/dashboard) → **Settings** → **Database** → connection string (URI, Transaction pooler).
+   - **`DIRECT_URL`** (recommended): **Direct** Postgres (**5432**) for Prisma CLI (`migrate`, `db push`). `prisma.config.ts` prefers `DIRECT_URL` over `DATABASE_URL` for those commands.
    - **Clerk:** `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`. In the [Clerk Dashboard](https://dashboard.clerk.com), add your production domain to allowed origins / redirect URLs.
    - **Collab (if used):** `COLLAB_JWT_SECRET` (same value as the collab server), `NEXT_PUBLIC_HOCUSPOCUS_URL` (`wss://…` to your collab host).
-5. **Do not** swap the Neon adapter in `lib/prisma.ts` for `pg` + `@prisma/adapter-pg` while using a pooled `DATABASE_URL`; that combination breaks in production behind PgBouncer.
-6. **Smoke test after deploy:** open the app signed-in, or call tRPC **`prismaHealth`** / **`dbHealth`** from the client or server to confirm the database is reachable.
+5. **Smoke test after deploy:** open the app signed-in, or call tRPC **`prismaHealth`** / **`dbHealth`** from the client or server to confirm the database is reachable.
 
 ### Prisma migrations in CI or from your machine
 
-- Prefer **`DIRECT_URL`** (direct Neon host) for `prisma migrate deploy` so the CLI is not going through the pooler.
-- If you only have one URL, use the direct string for the migrate job’s env; keep **`DATABASE_URL`** on the Vercel (or app) service as the pooled string.
+- Prefer **`DIRECT_URL`** (Supabase direct **5432**) for `prisma migrate deploy` so the CLI is not going through the transaction pooler.
+- If you only have one URL, use the direct string for the migrate job’s env; keep **`DATABASE_URL`** on the app host as the **transaction pooler** string.
 
 ### Realtime collab (Hocuspocus)
 
-- Run collab as a **separate** process or container (see **Docker** and **Render** below). It uses **`pg`** + `@prisma/adapter-pg` in `server/hocuspocus.ts`, which is appropriate for a long-lived Node server; it still needs a valid Postgres URL (often the same Neon project; direct or pooler per what Neon allows for your plan).
+- Run collab as a **separate** process or container (see **Docker** and **Render** below). `server/hocuspocus.ts` uses **`PrismaPg({ connectionString })`** like the Next.js app. A **direct 5432** URL is often simplest for a long-lived collab process against the same Supabase project.
 - **`COLLAB_JWT_SECRET`** must match exactly between Next.js and the collab service.
 - After changing **`NEXT_PUBLIC_HOCUSPOCUS_URL`**, redeploy the Next.js app so the client bundle picks up the new WebSocket URL.
 
@@ -146,7 +144,7 @@ Deploy Hocuspocus as a **second** [Render](https://render.com) **Web Service** (
 3. **Dockerfile path:** `Dockerfile.collab` (repo root). Render does not pick a nonstandard name automatically; you must set this in the service settings.
 4. **Build / start:** Leave the **build command** empty (the Dockerfile builds the image). Leave the **start command** empty unless you have a reason to override; the image listens on Render’s `PORT` because `server/hocuspocus.ts` falls back to `process.env.PORT` when `HOCUSPOCUS_PORT` is unset.
 5. **Environment variables** for the collab service (match your Next.js / Prisma setup):
-   - `DATABASE_URL`: same Postgres URL as the app (e.g. Neon).
+   - `DATABASE_URL`: same Postgres URL as the app (e.g. Supabase direct **5432** or your pooler, depending on how you run collab).
    - `COLLAB_JWT_SECRET`: **exactly the same** string as on the Next.js service.
 6. **Next.js service:** Set `NEXT_PUBLIC_HOCUSPOCUS_URL` to `wss://<collab-service-hostname>` (the collab service’s public URL, `wss` not `ws`). Redeploy Next so the client bundle picks up the change.
 7. **Health check (Render):** Set the service **health check path** to **`/health`**. The collab server responds with `200` and JSON `{"status":"ok","service":"google-docs-collab"}` (plain HTTP on the same host and port as the WebSocket upgrade).
@@ -212,9 +210,8 @@ Avoid protecting `/sign-in` and `/sign-up` to prevent redirect loops.
 
 | Variable                            | Required   | Description                                                         |
 | ----------------------------------- | ---------- | ------------------------------------------------------------------- |
-| `LOCAL_DATABASE_URL`                | Dev only   | Local Postgres URL (e.g. `postgresql://localhost:5432/app_dev`)     |
-| `DATABASE_URL`                      | Yes        | Postgres URL for Prisma runtime and raw SQL; dev: local; prod: prefer Neon **pooled** URL |
-| `DIRECT_URL`                        | Optional   | Neon **direct** (non-pooler) URL for Prisma CLI (`migrate`, `db push`). See `prisma.config.ts`. |
+| `DATABASE_URL`                      | Yes        | Postgres for Prisma, raw SQL, collab; dev: local; prod: Supabase **transaction pooler** (6543) + `?pgbouncer=true` |
+| `DIRECT_URL`                        | Optional   | Supabase **direct** (5432) for Prisma CLI (`migrate`, `db push`). See `prisma.config.ts`. |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (auth) | From [Clerk Dashboard](https://dashboard.clerk.com)                 |
 | `CLERK_SECRET_KEY`                  | Yes (auth) | From Clerk Dashboard                                                |
 | `COLLAB_JWT_SECRET`                 | Yes (collab) | Shared secret for Hocuspocus auth tokens (same for Next + collab server) |
@@ -233,7 +230,7 @@ app/
   page.tsx
   api/trpc/[trpc]/route.ts
 lib/
-  db.ts               # getSql(); Neon driver for raw SQL
+  db.ts               # getSql(); `pg.Client` tagged-template helper for raw SQL
   prisma.ts           # PrismaClient singleton
   utils.ts            # cn() for shadcn
 prisma/

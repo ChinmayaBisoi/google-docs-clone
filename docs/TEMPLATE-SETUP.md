@@ -10,7 +10,7 @@ Overview of the starter template configuration and how each piece works.
 | Styling      | Tailwind CSS v4         |
 | UI Components | shadcn/ui (Base UI)   |
 | API / Data   | tRPC v11 + TanStack React Query v5 |
-| Database     | PostgreSQL + Prisma 6 ORM (Neon serverless driver for raw SQL) |
+| Database     | PostgreSQL + Prisma ORM (`pg` for Prisma adapter and raw SQL in `lib/db.ts`) |
 | Auth         | Clerk                   |
 | Linting/Format | Biome                |
 
@@ -20,17 +20,16 @@ Overview of the starter template configuration and how each piece works.
 
 ### Production
 
-- **Driver:** `@neondatabase/serverless` (Neon’s serverless Postgres client; works with any Postgres 15+)
-- **Config:** `DATABASE_URL` in env (Neon or other Postgres URL)
+- **Driver:** `pg` (Prisma uses `@prisma/adapter-pg` with a connection string; raw SQL uses `pg.Client` via `getSql()` in `lib/db.ts`)
+- **Config:** `DATABASE_URL` in env (Supabase transaction pooler + `?pgbouncer=true`, or any Postgres URL)
 
 ### Development (Local Postgres)
 
-- **Config:** `LOCAL_DATABASE_URL` is used when `NODE_ENV === "development"` (for `getSql()`)
-- If `LOCAL_DATABASE_URL` is unset, it falls back to `DATABASE_URL`
+- **Config:** set **`DATABASE_URL`** to your local Postgres URL (Prisma, `getSql()`, collab).
 
 ### Prisma ORM
 
-- **Config:** Prisma uses `DATABASE_URL` only (no LOCAL_DATABASE_URL). For local dev, set `DATABASE_URL` to your local Postgres URL.
+- **Config:** **`DATABASE_URL`** for all environments.
 - **Client:** `lib/prisma.ts` exports a singleton `prisma` instance (avoids hot-reload connection exhaustion).
 - **tRPC:** `ctx.prisma` available in all procedures. See `prismaHealth` in `_app.ts` for usage.
 - **Migrations:** Run `npm run db:migrate` after schema changes. Use `db:push` for quick prototyping without migration files.
@@ -57,7 +56,7 @@ PGHOST=127.0.0.1 PGPORT=5433 npm run db:create
 
 Then in `.env.local`:
 ```
-LOCAL_DATABASE_URL="postgresql://$USER@localhost:5432/app_dev"
+DATABASE_URL="postgresql://$USER@localhost:5432/app_dev"
 ```
 
 ---
@@ -115,8 +114,7 @@ Avoid protecting `/sign-in` and `/sign-up` to prevent redirect loops.
 
 | Variable | Required | Description |
 | -------- | -------- | ----------- |
-| `LOCAL_DATABASE_URL` | Dev only | Local Postgres URL (e.g. `postgresql://localhost:5432/app_dev`) |
-| `DATABASE_URL` | Yes | Postgres URL — used by Prisma; in dev set to local, in prod to Neon |
+| `DATABASE_URL` | Yes | Postgres URL — Prisma, raw SQL, collab; dev: local; prod: often Supabase pooler (6543) |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (auth) | From [Clerk Dashboard](https://dashboard.clerk.com) |
 | `CLERK_SECRET_KEY` | Yes (auth) | From Clerk Dashboard |
 
@@ -132,7 +130,7 @@ app/
   page.tsx
   api/trpc/[trpc]/route.ts
 lib/
-  db.ts               # getSql() — Neon driver for raw SQL
+  db.ts               # getSql() — `pg.Client` tagged template for raw SQL
   prisma.ts           # PrismaClient singleton
   utils.ts            # cn() for shadcn
 prisma/

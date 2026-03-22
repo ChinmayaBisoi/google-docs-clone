@@ -22,4 +22,4 @@ psql -v ON_ERROR_STOP=0 -c "CREATE DATABASE $dbname WITH OWNER = $username;" || 
 result=$(psql -tAc "SELECT 1 FROM pg_database WHERE datname = '$dbname';")
 [[ "$result" != "1" ]] && { echo "Failed to create database."; exit 1; }
 
-echo "Done. Connection: LOCAL_DATABASE_URL=postgresql://$username:$userpassword_esc@${PGHOST:-localhost}:${PGPORT:-5432}/$dbname"
+echo "Done. Set DATABASE_URL=postgresql://$username:$userpassword_esc@${PGHOST:-localhost}:${PGPORT:-5432}/$dbname"

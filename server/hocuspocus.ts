@@ -1,7 +1,6 @@
 import { PrismaClient } from "@/generated/prisma/client";
 import { Server } from "@hocuspocus/server";
 import { PrismaPg } from "@prisma/adapter-pg";
-import { Pool } from "pg";
 import * as Y from "yjs";
 
 import { type CollabJwtPayload, ensureCollabJwtSecret, verifyCollabToken } from "@/lib/collab-jwt";
@@ -20,8 +19,9 @@ const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
 	throw new Error("DATABASE_URL is not set");
 }
-const hocuspocusPool = new Pool({ connectionString });
-const prisma = new PrismaClient({ adapter: new PrismaPg(hocuspocusPool) });
+const prisma = new PrismaClient({
+	adapter: new PrismaPg({ connectionString }),
+});
 
 const port = Number(process.env.HOCUSPOCUS_PORT ?? process.env.PORT ?? 1234);
 const address = process.env.HOCUSPOCUS_ADDRESS ?? "0.0.0.0";
