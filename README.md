@@ -78,7 +78,7 @@ Set the same values in `.env.local` for Next.js and when running the collab proc
 
 - `COLLAB_JWT_SECRET` — long random string; signs short-lived collab tokens from tRPC and is verified by Hocuspocus.
 - `NEXT_PUBLIC_HOCUSPOCUS_URL` — WebSocket URL the browser uses (for example `ws://127.0.0.1:1234` in dev).
-- Optional: `HOCUSPOCUS_PORT` (default `1234`), `HOCUSPOCUS_ADDRESS` (default `0.0.0.0`).
+- Optional: `HOCUSPOCUS_PORT` (default `1234`; on hosts like Render that set `PORT`, that value is used when `HOCUSPOCUS_PORT` is unset), `HOCUSPOCUS_ADDRESS` (default `0.0.0.0`).
 
 ### Run locally
 
@@ -100,6 +100,21 @@ docker run --rm -p 1234:1234 \
 ```
 
 Point `NEXT_PUBLIC_HOCUSPOCUS_URL` at your deployed host (for example `wss://collab.example.com`).
+
+### Render (collab WebSocket)
+
+Deploy Hocuspocus as a **second** [Render](https://render.com) **Web Service** (separate from the Next.js app). The Next.js service stays your normal Node build; collab uses **Docker** from this repo.
+
+1. **New Web Service** → connect the same Git repo.
+2. **Environment:** Docker.
+3. **Dockerfile path:** `Dockerfile.collab` (repo root). Render does not pick a nonstandard name automatically; you must set this in the service settings.
+4. **Build / start:** Leave the **build command** empty (the Dockerfile builds the image). Leave the **start command** empty unless you have a reason to override; the image listens on Render’s `PORT` because `server/hocuspocus.ts` falls back to `process.env.PORT` when `HOCUSPOCUS_PORT` is unset.
+5. **Environment variables** for the collab service (match your Next.js / Prisma setup):
+   - `DATABASE_URL` — same Postgres URL as the app (e.g. Neon).
+   - `COLLAB_JWT_SECRET` — **exactly the same** string as on the Next.js service.
+6. **Next.js service:** Set `NEXT_PUBLIC_HOCUSPOCUS_URL` to `wss://<collab-service-hostname>` (the collab service’s public URL, `wss` not `ws`). Redeploy Next so the client bundle picks up the change.
+
+**Notes:** Free instances **spin down** after idle; WebSockets will drop until users reconnect. If a deploy fails health checks, adjust or relax the HTTP health check for this service (a WS-only process may not serve a useful `GET /`).
 
 ---
 

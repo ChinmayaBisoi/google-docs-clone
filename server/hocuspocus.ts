@@ -23,7 +23,7 @@ if (!connectionString) {
 const hocuspocusPool = new Pool({ connectionString });
 const prisma = new PrismaClient({ adapter: new PrismaPg(hocuspocusPool) });
 
-const port = Number(process.env.HOCUSPOCUS_PORT ?? 1234);
+const port = Number(process.env.HOCUSPOCUS_PORT ?? process.env.PORT ?? 1234);
 const address = process.env.HOCUSPOCUS_ADDRESS ?? "0.0.0.0";
 
 const collabDebugLogs = process.env.NODE_ENV !== "production";
