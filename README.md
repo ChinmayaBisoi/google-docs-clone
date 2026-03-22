@@ -75,13 +75,14 @@ Use this checklist when deploying the Next.js app (for example [Vercel](https://
 
 1. **Build command:** `npm run build` (default on most hosts). **Output:** Next.js.
 2. **Install:** `npm install` (postinstall runs `prisma generate`).
-3. **Environment variables** (minimum):
+3. **Node:** Use **Node 20+** on the host. Prisma’s Neon adapter talks to Neon over WebSockets; `lib/prisma.ts` sets `neonConfig.webSocketConstructor` from the **`ws`** package because many Node 20 deployments do not expose a global `WebSocket` (Node 22+ does). `next.config.ts` includes `serverExternalPackages: ["ws"]` so the bundler does not break that dependency.
+4. **Environment variables** (minimum):
    - **`DATABASE_URL`:** Neon **pooled** URL from the Neon dashboard (hostname includes `-pooler`). The app’s Prisma client expects this for serverless.
    - **`DIRECT_URL`** (recommended for Neon): **Direct** URL (no `-pooler`) for Prisma CLI only. Add it if you run `prisma migrate deploy` / `db push` from CI against Neon; `prisma.config.ts` prefers `DIRECT_URL` over `DATABASE_URL` for those commands. Optional if your CLI always uses a direct connection another way.
    - **Clerk:** `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`. In the [Clerk Dashboard](https://dashboard.clerk.com), add your production domain to allowed origins / redirect URLs.
    - **Collab (if used):** `COLLAB_JWT_SECRET` (same value as the collab server), `NEXT_PUBLIC_HOCUSPOCUS_URL` (`wss://…` to your collab host).
-4. **Do not** swap the Neon adapter in `lib/prisma.ts` for `pg` + `@prisma/adapter-pg` while using a pooled `DATABASE_URL`; that combination breaks in production behind PgBouncer.
-5. **Smoke test after deploy:** open the app signed-in, or call tRPC **`prismaHealth`** / **`dbHealth`** from the client or server to confirm the database is reachable.
+5. **Do not** swap the Neon adapter in `lib/prisma.ts` for `pg` + `@prisma/adapter-pg` while using a pooled `DATABASE_URL`; that combination breaks in production behind PgBouncer.
+6. **Smoke test after deploy:** open the app signed-in, or call tRPC **`prismaHealth`** / **`dbHealth`** from the client or server to confirm the database is reachable.
 
 ### Prisma migrations in CI or from your machine
 

@@ -37,7 +37,14 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 	const queryClient = getQueryClient();
 	const [trpcClient] = useState(() =>
 		createTRPCClient<AppRouter>({
-			links: [httpBatchLink({ url: getUrl() })],
+			links: [
+				httpBatchLink({
+					url: getUrl(),
+					fetch(url, options) {
+						return fetch(url, { ...options, credentials: "include" });
+					},
+				}),
+			],
 		})
 	);
 	return (
