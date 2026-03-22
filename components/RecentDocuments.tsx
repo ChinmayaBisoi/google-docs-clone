@@ -21,7 +21,9 @@ export function RecentDocuments() {
 		enabled: isLoaded && isSignedIn,
 	});
 
-	const documents: RecentDocumentListItem[] = (listQuery.data ?? []).map((d) => ({
+	const listRaw = listQuery.data;
+	const list = Array.isArray(listRaw) ? listRaw : [];
+	const documents: RecentDocumentListItem[] = list.map((d) => ({
 		id: d.id,
 		title: d.title,
 		lastOpened: formatRelativeTime(d.updatedAt),

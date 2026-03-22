@@ -1,236 +1,22 @@
 "use client";
 
-import { EditorContent, EditorContext, useEditor } from "@tiptap/react";
-import type { CSSProperties } from "react";
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
-
-import { Highlight } from "@tiptap/extension-highlight";
-import { Image } from "@tiptap/extension-image";
-import { TaskItem, TaskList } from "@tiptap/extension-list";
-import { Subscript } from "@tiptap/extension-subscript";
-import { Superscript } from "@tiptap/extension-superscript";
-import { TextAlign } from "@tiptap/extension-text-align";
-import { Typography } from "@tiptap/extension-typography";
-import { Selection } from "@tiptap/extensions";
-// --- Tiptap Core Extensions ---
-import { StarterKit } from "@tiptap/starter-kit";
-
-// --- UI Primitives ---
-import { Button } from "@/components/tiptap-ui-primitive/button";
-import { Spacer } from "@/components/tiptap-ui-primitive/spacer";
-import { Toolbar, ToolbarGroup, ToolbarSeparator } from "@/components/tiptap-ui-primitive/toolbar";
-
-import { HorizontalRule } from "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node-extension";
-// --- Tiptap Node ---
-import { ImageUploadNode } from "@/components/tiptap-node/image-upload-node/image-upload-node-extension";
-import "@/components/tiptap-node/blockquote-node/blockquote-node.scss";
-import "@/components/tiptap-node/code-block-node/code-block-node.scss";
-import "@/components/tiptap-node/horizontal-rule-node/horizontal-rule-node.scss";
-import "@/components/tiptap-node/list-node/list-node.scss";
-import "@/components/tiptap-node/image-node/image-node.scss";
-import "@/components/tiptap-node/heading-node/heading-node.scss";
-import "@/components/tiptap-node/paragraph-node/paragraph-node.scss";
-
-import { BlockquoteButton } from "@/components/tiptap-ui/blockquote-button";
-import { CodeBlockButton } from "@/components/tiptap-ui/code-block-button";
-import {
-	ColorHighlightPopover,
-	ColorHighlightPopoverButton,
-	ColorHighlightPopoverContent,
-} from "@/components/tiptap-ui/color-highlight-popover";
-// --- Tiptap UI ---
-import { HeadingDropdownMenu } from "@/components/tiptap-ui/heading-dropdown-menu";
-import { LinkButton, LinkContent, LinkPopover } from "@/components/tiptap-ui/link-popover";
-import { ListDropdownMenu } from "@/components/tiptap-ui/list-dropdown-menu";
-import { MarkButton } from "@/components/tiptap-ui/mark-button";
-import { TextAlignButton } from "@/components/tiptap-ui/text-align-button";
-import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button";
-
-// --- Icons ---
-import { ArrowLeftIcon } from "@/components/tiptap-icons/arrow-left-icon";
-import { HighlighterIcon } from "@/components/tiptap-icons/highlighter-icon";
-import { LinkIcon } from "@/components/tiptap-icons/link-icon";
-
-import { useCursorVisibility } from "@/hooks/use-cursor-visibility";
-// --- Hooks ---
-import { useIsBreakpoint } from "@/hooks/use-is-breakpoint";
-import { useWindowSize } from "@/hooks/use-window-size";
-
-// --- Lib ---
-import { MAX_FILE_SIZE, handleImageUpload } from "@/lib/tiptap-utils";
-
-// --- Styles ---
-import "@/components/tiptap-templates/simple/simple-editor.scss";
-
-import content from "@/components/tiptap-templates/simple/data/content.json";
-import type { SimpleEditorProps } from "@/components/tiptap-templates/simple/simple-editor-types";
 import { SimpleEditorChromeHeader } from "@/components/documents/SimpleEditorChromeHeader";
-import { ThemeSwitcher } from "@/components/ThemeSwitcher";
-
-const MainToolbarContent = ({
-	onHighlighterClick,
-	onLinkClick,
-	isMobile,
-}: {
-	onHighlighterClick: () => void;
-	onLinkClick: () => void;
-	isMobile: boolean;
-}) => {
-	return (
-		<>
-			<Spacer />
-
-			<ToolbarGroup>
-				<UndoRedoButton action="undo" />
-				<UndoRedoButton action="redo" />
-			</ToolbarGroup>
-
-			<ToolbarSeparator />
-
-			<ToolbarGroup>
-				<HeadingDropdownMenu modal={false} levels={[1, 2, 3, 4]} />
-				<ListDropdownMenu modal={false} types={["bulletList", "orderedList", "taskList"]} />
-				<BlockquoteButton />
-				<CodeBlockButton />
-			</ToolbarGroup>
-
-			<ToolbarSeparator />
-
-			<ToolbarGroup>
-				<MarkButton type="bold" />
-				<MarkButton type="italic" />
-				<MarkButton type="strike" />
-				<MarkButton type="code" />
-				<MarkButton type="underline" />
-				{!isMobile ? (
-					<ColorHighlightPopover />
-				) : (
-					<ColorHighlightPopoverButton onClick={onHighlighterClick} />
-				)}
-				{!isMobile ? <LinkPopover /> : <LinkButton onClick={onLinkClick} />}
-			</ToolbarGroup>
-
-			<ToolbarSeparator />
-
-			<ToolbarGroup>
-				<MarkButton type="superscript" />
-				<MarkButton type="subscript" />
-			</ToolbarGroup>
-
-			<ToolbarSeparator />
-
-			<ToolbarGroup>
-				<TextAlignButton align="left" />
-				<TextAlignButton align="center" />
-				<TextAlignButton align="right" />
-				<TextAlignButton align="justify" />
-			</ToolbarGroup>
-
-			<ToolbarSeparator />
-
-			{/* <ToolbarGroup>
-				<ImageUploadButton text="Add" />
-			</ToolbarGroup> */}
-
-			<Spacer />
-
-			{isMobile && <ToolbarSeparator />}
-
-			<ToolbarGroup>
-				{/* <ThemeToggle /> */}
-				<ThemeSwitcher />
-			</ToolbarGroup>
-		</>
-	);
-};
-
-const MobileToolbarContent = ({
-	type,
-	onBack,
-}: {
-	type: "highlighter" | "link";
-	onBack: () => void;
-}) => (
-	<>
-		<ToolbarGroup>
-			<Button variant="ghost" onClick={onBack}>
-				<ArrowLeftIcon className="tiptap-button-icon" />
-				{type === "highlighter" ? (
-					<HighlighterIcon className="tiptap-button-icon" />
-				) : (
-					<LinkIcon className="tiptap-button-icon" />
-				)}
-			</Button>
-		</ToolbarGroup>
-
-		<ToolbarSeparator />
-
-		{type === "highlighter" ? <ColorHighlightPopoverContent /> : <LinkContent />}
-	</>
-);
+import { SimpleEditorCollaborativePane } from "@/components/tiptap-templates/simple/SimpleEditorCollaborativePane";
+import type { SimpleEditorProps } from "@/components/tiptap-templates/simple/simple-editor-types";
+import { useCollaborativeYjs } from "@/hooks/useCollaborativeYjs";
+import { collabUserColor } from "@/lib/collab-user-color";
+import { useUser } from "@clerk/nextjs";
+import { Loader2 } from "lucide-react";
+import type { CSSProperties } from "react";
+import { useLayoutEffect, useRef, useState } from "react";
 
 export function SimpleEditor({ documentId }: SimpleEditorProps) {
-	const isMobile = useIsBreakpoint();
-	const { height } = useWindowSize();
-	const [mobileView, setMobileView] = useState<"main" | "highlighter" | "link">("main");
 	const chromeRef = useRef<HTMLDivElement>(null);
 	const toolbarRef = useRef<HTMLDivElement>(null);
 	const [chromeHeightPx, setChromeHeightPx] = useState(64);
 
-	const editor = useEditor({
-		immediatelyRender: false,
-		editorProps: {
-			attributes: {
-				autocomplete: "off",
-				autocorrect: "off",
-				autocapitalize: "off",
-				"aria-label": "Main content area, start typing to enter text.",
-				class: "simple-editor",
-			},
-		},
-		extensions: [
-			StarterKit.configure({
-				horizontalRule: false,
-				link: {
-					openOnClick: false,
-					enableClickSelection: true,
-				},
-			}),
-			HorizontalRule,
-			TextAlign.configure({ types: ["heading", "paragraph"] }),
-			TaskList,
-			TaskItem.configure({ nested: true }),
-			Highlight.configure({ multicolor: true }),
-			Image,
-			Typography,
-			Superscript,
-			Subscript,
-			Selection,
-			ImageUploadNode.configure({
-				accept: "image/*",
-				maxSize: MAX_FILE_SIZE,
-				limit: 3,
-				upload: handleImageUpload,
-				onError: (error) => console.error("Upload failed:", error),
-			}),
-		],
-		content,
-	});
-
-	const chromeH = chromeRef.current?.getBoundingClientRect().height ?? 0;
-	const toolbarH = toolbarRef.current?.getBoundingClientRect().height ?? 0;
-	const overlayHeight = isMobile ? toolbarH : chromeH + toolbarH;
-
-	const rect = useCursorVisibility({
-		editor,
-		overlayHeight,
-	});
-
-	useEffect(() => {
-		if (!isMobile && mobileView !== "main") {
-			setMobileView("main");
-		}
-	}, [isMobile, mobileView]);
+	const collab = useCollaborativeYjs(documentId);
+	const { user } = useUser();
 
 	useLayoutEffect(() => {
 		const el = chromeRef.current;
@@ -242,6 +28,37 @@ export function SimpleEditor({ documentId }: SimpleEditorProps) {
 		return () => ro.disconnect();
 	}, []);
 
+	const cursorName = user?.fullName?.trim() || user?.primaryEmailAddress?.emailAddress || "User";
+	const cursorColor = user?.id ? collabUserColor(user.id) : "#1a73e8";
+
+	if (!documentId) {
+		return null;
+	}
+
+	if (collab.kind === "missing_ws_url") {
+		return (
+			<div className="flex h-dvh items-center justify-center px-4 text-center text-sm text-muted-foreground">
+				Set NEXT_PUBLIC_HOCUSPOCUS_URL and run the collab server (npm run collab).
+			</div>
+		);
+	}
+
+	if (collab.kind === "token_error") {
+		return (
+			<div className="flex h-dvh flex-col items-center justify-center gap-2 px-4 text-center">
+				<p className="text-sm text-muted-foreground">{collab.message}</p>
+			</div>
+		);
+	}
+
+	if (collab.kind === "loading" || collab.kind === "idle") {
+		return (
+			<div className="flex h-dvh items-center justify-center">
+				<Loader2 className="size-10 animate-spin text-primary" aria-label="Loading editor" />
+			</div>
+		);
+	}
+
 	return (
 		<div
 			className="simple-editor-wrapper"
@@ -252,33 +69,14 @@ export function SimpleEditor({ documentId }: SimpleEditorProps) {
 			}
 		>
 			<SimpleEditorChromeHeader ref={chromeRef} documentId={documentId} />
-			<EditorContext.Provider value={{ editor }}>
-				<Toolbar
-					ref={toolbarRef}
-					style={{
-						...(isMobile
-							? {
-								bottom: `calc(100% - ${height - rect.y}px)`,
-							}
-							: {}),
-					}}
-				>
-					{mobileView === "main" ? (
-						<MainToolbarContent
-							onHighlighterClick={() => setMobileView("highlighter")}
-							onLinkClick={() => setMobileView("link")}
-							isMobile={isMobile}
-						/>
-					) : (
-						<MobileToolbarContent
-							type={mobileView === "highlighter" ? "highlighter" : "link"}
-							onBack={() => setMobileView("main")}
-						/>
-					)}
-				</Toolbar>
-
-				<EditorContent editor={editor} role="presentation" className="simple-editor-content" />
-			</EditorContext.Provider>
+			<SimpleEditorCollaborativePane
+				ydoc={collab.ydoc}
+				provider={collab.provider}
+				cursorName={cursorName}
+				cursorColor={cursorColor}
+				chromeRef={chromeRef}
+				toolbarRef={toolbarRef}
+			/>
 		</div>
 	);
 }
