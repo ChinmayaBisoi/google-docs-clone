@@ -17,6 +17,7 @@ The stack below is **implemented**. Operational runbook (env, scripts, Docker) l
 | Durability | Postgres `Document.yjsState` only (legacy `Document.content` removed). Client: `y-indexeddb` per `documentId`. |
 | Shareable route | [`app/documents/[documentId]/page.tsx`](../app/documents/[documentId]/page.tsx) |
 | Owner vs guest UI | [`components/documents/SimpleEditorChromeHeader.tsx`](../components/documents/SimpleEditorChromeHeader.tsx) (star hidden for non-owners; title rename UI not wired yet) |
+| Presence avatars | [`CollaborationPresenceAvatars.tsx`](../components/documents/CollaborationPresenceAvatars.tsx) + [`useCollaborationPresence.ts`](../hooks/useCollaborationPresence.ts) (Yjs awareness: names, colors, optional Clerk `imageUrl` for local user) |
 
 **Sharing model:** Any **signed-in** user who knows the document URL can open the doc (`document.getById`). The **owner** can star the doc and may rename the title via `updateTitle` when the UI calls it. **Guests** (non-owners) can edit body content but cannot star or change the title through the API as implemented.
 

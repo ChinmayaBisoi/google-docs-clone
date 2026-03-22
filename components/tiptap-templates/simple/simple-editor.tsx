@@ -30,6 +30,7 @@ export function SimpleEditor({ documentId }: SimpleEditorProps) {
 
 	const cursorName = user?.fullName?.trim() || user?.primaryEmailAddress?.emailAddress || "User";
 	const cursorColor = user?.id ? collabUserColor(user.id) : "#1a73e8";
+	const cursorImageUrl = user?.imageUrl ?? undefined;
 
 	if (!documentId) {
 		return null;
@@ -68,12 +69,17 @@ export function SimpleEditor({ documentId }: SimpleEditorProps) {
 				} as CSSProperties
 			}
 		>
-			<SimpleEditorChromeHeader ref={chromeRef} documentId={documentId} />
+			<SimpleEditorChromeHeader
+				ref={chromeRef}
+				documentId={documentId}
+				collabProvider={collab.provider}
+			/>
 			<SimpleEditorCollaborativePane
 				ydoc={collab.ydoc}
 				provider={collab.provider}
 				cursorName={cursorName}
 				cursorColor={cursorColor}
+				cursorImageUrl={cursorImageUrl}
 				chromeRef={chromeRef}
 				toolbarRef={toolbarRef}
 			/>

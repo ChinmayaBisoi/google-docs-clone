@@ -159,6 +159,8 @@ export interface SimpleEditorCollaborativePaneProps {
 	provider: HocuspocusProvider;
 	cursorName: string;
 	cursorColor: string;
+	/** Clerk profile image for local collaborator avatar strip (optional). */
+	cursorImageUrl?: string;
 	chromeRef: RefObject<HTMLDivElement | null>;
 	toolbarRef: RefObject<HTMLDivElement | null>;
 }
@@ -168,6 +170,7 @@ export function SimpleEditorCollaborativePane({
 	provider,
 	cursorName,
 	cursorColor,
+	cursorImageUrl,
 	chromeRef,
 	toolbarRef,
 }: SimpleEditorCollaborativePaneProps) {
@@ -205,6 +208,7 @@ export function SimpleEditorCollaborativePane({
 					user: {
 						name: cursorName,
 						color: cursorColor,
+						...(cursorImageUrl ? { imageUrl: cursorImageUrl } : {}),
 					},
 				}),
 				HorizontalRule,
@@ -226,7 +230,7 @@ export function SimpleEditorCollaborativePane({
 				}),
 			],
 		},
-		[ydoc, provider, cursorName, cursorColor]
+		[ydoc, provider, cursorName, cursorColor, cursorImageUrl]
 	);
 
 	const chromeH = chromeRef.current?.getBoundingClientRect().height ?? 0;

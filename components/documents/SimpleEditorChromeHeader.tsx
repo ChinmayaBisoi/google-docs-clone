@@ -11,13 +11,14 @@ import { Share2, Star } from "lucide-react";
 import Link from "next/link";
 import { forwardRef, useEffect } from "react";
 
+import { CollaborationPresenceAvatars } from "@/components/documents/CollaborationPresenceAvatars";
 import type { SimpleEditorChromeHeaderProps } from "@/components/documents/simple-editor-chrome-types";
 import { usePersistedDocumentStar } from "@/components/documents/usePersistedDocumentStar";
 import { ThemeSwitcher } from "../ThemeSwitcher";
 import { NavbarUserMenu } from "../auth/NavbarUserMenu";
 
 export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorChromeHeaderProps>(
-	function SimpleEditorChromeHeader({ documentId }, ref) {
+	function SimpleEditorChromeHeader({ documentId, collabProvider = null }, ref) {
 		const trpc = useTRPC();
 		const { isSignedIn } = useAuth();
 		const docQuery = useQuery({
@@ -92,7 +93,9 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 										</Button>
 									)}
 								</div>
-								<div className="min-w-0" aria-hidden />
+								<div className="flex min-w-0 justify-center justify-self-center overflow-hidden px-1">
+									<CollaborationPresenceAvatars provider={collabProvider} />
+								</div>
 
 								<div className="flex min-w-0 justify-end justify-self-end">
 									<div className="flex shrink-0 items-center gap-2">
