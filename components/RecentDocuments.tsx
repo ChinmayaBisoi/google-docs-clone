@@ -1,7 +1,7 @@
 "use client";
 
-import { EllipsisVertical, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EllipsisVertical, FileText } from "lucide-react";
 
 interface DocumentItem {
 	id: string;
@@ -25,11 +25,7 @@ export function RecentDocuments({ documents = [] }: RecentDocumentsProps) {
 				</div>
 			</div>
 
-			{documents.length > 0 ? (
-				<DocumentList documents={documents} />
-			) : (
-				<EmptyState />
-			)}
+			{documents.length > 0 ? <DocumentList documents={documents} /> : <EmptyState />}
 		</section>
 	);
 }
@@ -41,7 +37,12 @@ function OwnedByFilter() {
 			className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
 		>
 			Owned by anyone
-			<svg className="size-4 text-current" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+			<svg
+				className="size-4 text-current"
+				viewBox="0 0 24 24"
+				fill="currentColor"
+				aria-hidden="true"
+			>
 				<title>Expand</title>
 				<path d="M7 10l5 5 5-5z" />
 			</svg>
@@ -78,13 +79,9 @@ function DocumentRow({ document }: { document: DocumentItem }) {
 	return (
 		<div className="group flex cursor-pointer items-center gap-4 rounded-lg px-3 py-2.5 hover:bg-accent/50">
 			<FileText className="size-6 shrink-0 text-primary" />
-			<span className="flex-1 truncate text-sm font-medium text-foreground">
-				{document.title}
-			</span>
+			<span className="flex-1 truncate text-sm font-medium text-foreground">{document.title}</span>
 			<span className="text-xs text-muted-foreground">{document.owner}</span>
-			<span className="text-xs text-muted-foreground">
-				{document.lastOpened}
-			</span>
+			<span className="text-xs text-muted-foreground">{document.lastOpened}</span>
 			<Button
 				variant="ghost"
 				size="icon-sm"

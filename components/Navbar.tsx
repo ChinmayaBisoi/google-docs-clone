@@ -1,10 +1,10 @@
 "use client";
 
-import { Menu, Search } from "lucide-react";
-import { NavbarUserMenu } from "@/components/auth/NavbarUserMenu";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { NavbarUserMenu } from "@/components/auth/NavbarUserMenu";
+import { Button } from "@/components/ui/button";
+import { Menu, Search } from "lucide-react";
 
 export function Navbar() {
 	return (

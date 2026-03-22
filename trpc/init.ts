@@ -1,6 +1,6 @@
-import { auth } from "@clerk/nextjs/server";
-import { initTRPC, TRPCError } from "@trpc/server";
 import { prisma } from "@/lib/prisma";
+import { auth } from "@clerk/nextjs/server";
+import { TRPCError, initTRPC } from "@trpc/server";
 
 export const createTRPCContext = async (_opts: { headers: Headers }) => {
 	const { userId } = await auth();

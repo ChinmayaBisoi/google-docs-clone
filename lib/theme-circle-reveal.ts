@@ -15,12 +15,7 @@ function easeOutCubic(t: number): number {
 	return 1 - (1 - t) ** 3;
 }
 
-function setRevealMask(
-	el: HTMLDivElement,
-	cx: number,
-	cy: number,
-	radiusPx: number,
-): void {
+function setRevealMask(el: HTMLDivElement, cx: number, cy: number, radiusPx: number): void {
 	// Transparent inside the disk = overlay hidden there = new themed page shows through.
 	// Opaque white outside = overlay (old surface) visible.
 	if (radiusPx <= 0.5) {
@@ -69,7 +64,7 @@ export function runThemeCircleReveal(options: RunThemeCircleRevealOptions): void
 	const endR =
 		Math.hypot(
 			Math.max(originX, window.innerWidth - originX),
-			Math.max(originY, window.innerHeight - originY),
+			Math.max(originY, window.innerHeight - originY)
 		) * 1.02;
 
 	document.body.appendChild(div);

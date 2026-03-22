@@ -1,8 +1,4 @@
-import {
-	DOCS_PALETTE_ATTR,
-	THEME_STORAGE_KEY,
-	THEMES,
-} from "@/lib/themes";
+import { DOCS_PALETTE_ATTR, THEMES, THEME_STORAGE_KEY } from "@/lib/themes";
 
 const VALID_IDS = THEMES.map((t) => t.id);
 

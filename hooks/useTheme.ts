@@ -1,14 +1,7 @@
 "use client";
 
-import {
-	applyDocsThemeToDocument,
-	normalizeDocsThemeId,
-} from "@/lib/docs-theme-document";
-import {
-	type DocsThemeId,
-	THEME_STORAGE_KEY,
-	THEMES,
-} from "@/lib/themes";
+import { applyDocsThemeToDocument, normalizeDocsThemeId } from "@/lib/docs-theme-document";
+import { type DocsThemeId, THEMES, THEME_STORAGE_KEY } from "@/lib/themes";
 import { useCallback, useLayoutEffect, useState } from "react";
 
 /**
@@ -45,8 +38,7 @@ export function useTheme() {
 		setThemeIdState(next);
 	}, []);
 
-	const currentTheme =
-		THEMES.find((t) => t.id === themeId) ?? THEMES[0];
+	const currentTheme = THEMES.find((t) => t.id === themeId) ?? THEMES[0];
 
 	return { themeId, setTheme, currentTheme, themes: THEMES };
 }

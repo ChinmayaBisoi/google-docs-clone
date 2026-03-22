@@ -1,5 +1,5 @@
-import { TRPCError } from "@trpc/server";
 import { syncClerkUser } from "@/lib/clerk-user";
+import { TRPCError } from "@trpc/server";
 import { createTRPCRouter, protectedProcedure } from "../init";
 
 export const userRouter = createTRPCRouter({
