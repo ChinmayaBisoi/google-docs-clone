@@ -82,6 +82,7 @@ export const CodeBlockButton = forwardRef<HTMLButtonElement, CodeBlockButtonProp
 				type="button"
 				variant="ghost"
 				data-active-state={isActive ? "on" : "off"}
+				// biome-ignore lint/a11y/useSemanticElements: <explanation>
 				role="button"
 				disabled={!canToggle}
 				data-disabled={!canToggle}

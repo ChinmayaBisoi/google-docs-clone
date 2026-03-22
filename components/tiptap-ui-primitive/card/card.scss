@@ -1,13 +1,7 @@
 :root {
-  --tiptap-card-bg-color: var(--white);
-  --tiptap-card-border-color: var(--tt-gray-light-a-100);
-  --tiptap-card-group-label-color: var(--tt-gray-light-a-800);
-}
-
-.dark {
-  --tiptap-card-bg-color: var(--tt-gray-dark-50);
-  --tiptap-card-border-color: var(--tt-gray-dark-a-100);
-  --tiptap-card-group-label-color: var(--tt-gray-dark-a-800);
+  --tiptap-card-bg-color: var(--card);
+  --tiptap-card-border-color: var(--border);
+  --tiptap-card-group-label-color: var(--foreground);
 }
 
 .tiptap-card {
@@ -15,7 +9,7 @@
   --border-width: 1px;
 
   border-radius: calc(var(--padding) + var(--tt-radius-lg));
-  box-shadow: var(--tt-shadow-elevated-md);
+  box-shadow: var(--shadow-md, var(--tt-shadow-elevated-md));
   background-color: var(--tiptap-card-bg-color);
   border: 1px solid var(--tiptap-card-border-color);
   display: flex;

@@ -26,7 +26,7 @@ import {
 
 export interface HeadingDropdownMenuProps
 	extends Omit<ButtonProps, "type">,
-		UseHeadingDropdownMenuConfig {
+	UseHeadingDropdownMenuConfig {
 	/**
 	 * Callback for when the dropdown opens or closes
 	 */
@@ -83,6 +83,7 @@ export const HeadingDropdownMenu = forwardRef<HTMLButtonElement, HeadingDropdown
 						type="button"
 						variant="ghost"
 						data-active-state={isActive ? "on" : "off"}
+						// biome-ignore lint/a11y/useSemanticElements: <explanation>
 						role="button"
 						tabIndex={-1}
 						disabled={!canToggle}

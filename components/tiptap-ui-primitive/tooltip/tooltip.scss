@@ -1,13 +1,7 @@
 .tiptap-tooltip {
-  --tt-tooltip-bg: var(--tt-gray-light-900);
-  --tt-tooltip-text: var(--white);
-  --tt-kbd: var(--tt-gray-dark-a-400);
-
-  .dark & {
-    --tt-tooltip-bg: var(--white);
-    --tt-tooltip-text: var(--tt-gray-light-600);
-    --tt-kbd: var(--tt-gray-light-a-400);
-  }
+  --tt-tooltip-bg: var(--primary);
+  --tt-tooltip-text: var(--primary-foreground);
+  --tt-kbd: color-mix(in oklch, var(--primary-foreground) 65%, transparent);
 }
 
 .tiptap-tooltip {
@@ -19,7 +13,7 @@
   font-size: 0.75rem;
   font-weight: 500;
   color: var(--tt-tooltip-text);
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  box-shadow: var(--shadow-md, var(--tt-shadow-elevated-md));
   text-align: center;
 
   kbd {

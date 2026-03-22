@@ -157,6 +157,28 @@ proxy.ts              # Clerk auth (Next.js 16 proxy convention)
 
 ---
 
+## Document page (`app/documents/[documentId]/page.tsx`)
+
+This route supports two intentional setups. Pick one by what the page component returns. Neither is “broken”; they target different goals.
+
+### TipTap template (`SimpleEditor`)
+
+Returning `SimpleEditor` from `@/components/tiptap-templates/simple/simple-editor` is a valid choice when you are iterating on the TipTap toolbar, nodes, and styling against a stable URL such as `/documents/123`.
+
+That template uses `useEditor({ immediatelyRender: false })` so ProseMirror mounts only on the client. That avoids SSR and hydration mismatches with the editor. The tradeoff is a short visible flash on hard refresh until the client attaches the editor. That flash is expected for this mode, not a routing mistake.
+
+### Product editor (`DocumentEditorRoute`)
+
+Returning `DocumentEditorRoute` with a server-loaded document (for example `createTRPCCaller` + `document.getById`, serialized payload as `initialDocument`) connects the route to Prisma-backed docs and the Google-docs-style shell. Passing `initialData` on the client query avoids a full-page loading spinner on refresh. `DocumentEditorCanvas` uses `useLayoutEffect` so body content is painted in the same frame as the shell when possible.
+
+### Moving forward
+
+- Use **SimpleEditor** when the priority is TipTap UX and you accept client-only editor mount.
+- Use **DocumentEditorRoute** when the priority is real documents, auth, and minimal loading flash.
+- Switching between them is a deliberate edit to `page.tsx`, not leftover dead code.
+
+---
+
 ## Scripts
 
 

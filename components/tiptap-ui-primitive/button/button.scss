@@ -18,9 +18,11 @@
   transition-duration: var(--tt-transition-duration-default);
   transition-timing-function: var(--tt-transition-easing-default);
 
-  // focus-visible
   &:focus-visible {
     outline: none;
+    box-shadow:
+      0 0 0 2px var(--background),
+      0 0 0 4px color-mix(in oklch, var(--ring) 50%, transparent);
   }
 
   &[data-highlighted="true"],

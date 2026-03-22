@@ -118,27 +118,16 @@
   --black: rgba(14, 14, 17, 1);
   --transparent: rgba(255, 255, 255, 0);
 
-  /****************** 
-  Shadow variables
-  ******************/
-
-  /* Shadows Light */
-  --tt-shadow-elevated-md:
-    0px 16px 48px 0px rgba(17, 24, 39, 0.04),
-    0px 12px 24px 0px rgba(17, 24, 39, 0.04),
-    0px 6px 8px 0px rgba(17, 24, 39, 0.02),
-    0px 2px 3px 0px rgba(17, 24, 39, 0.02);
-
   /************************************************** 
-       Radius variables 
+       Radius variables (overridden below from --radius when theme loads)
     **************************************************/
 
-  --tt-radius-xxs: 0.125rem; /* 2px */
-  --tt-radius-xs: 0.25rem; /* 4px */
-  --tt-radius-sm: 0.375rem; /* 6px */
-  --tt-radius-md: 0.5rem; /* 8px */
-  --tt-radius-lg: 0.75rem; /* 12px */
-  --tt-radius-xl: 1rem; /* 16px */
+  --tt-radius-xxs: 0.125rem;
+  --tt-radius-xs: 0.25rem;
+  --tt-radius-sm: 0.375rem;
+  --tt-radius-md: 0.5rem;
+  --tt-radius-lg: 0.75rem;
+  --tt-radius-xl: 1rem;
 
   /************************************************** 
        Transition variables 
@@ -173,36 +162,28 @@
 
 :root {
   /************************************************** 
-      Global colors 
+      Global colors (align with app shadcn tokens in globals.css)
   **************************************************/
 
-  /* Global colors - Light mode */
-  --tt-bg-color: var(--white);
-  --tt-border-color: var(--tt-gray-light-a-200);
-  --tt-border-color-tint: var(--tt-gray-light-a-100);
-  --tt-sidebar-bg-color: var(--tt-gray-light-100);
-  --tt-scrollbar-color: var(--tt-gray-light-a-200);
-  --tt-cursor-color: var(--tt-brand-color-500);
-  --tt-selection-color: rgba(157, 138, 255, 0.2);
-  --tt-card-bg-color: var(--white);
-  --tt-card-border-color: var(--tt-gray-light-a-100);
-}
+  --tt-bg-color: var(--background);
+  --tt-border-color: var(--border);
+  --tt-border-color-tint: var(--input);
+  --tt-sidebar-bg-color: var(--sidebar);
+  --tt-scrollbar-color: color-mix(in oklch, var(--muted-foreground) 35%, transparent);
+  --tt-cursor-color: var(--primary);
+  --tt-selection-color: color-mix(in oklch, var(--primary) 22%, transparent);
+  --tt-card-bg-color: var(--card);
+  --tt-card-border-color: var(--border);
 
-/* Global colors - Dark mode */
-.dark {
-  --tt-bg-color: var(--black);
-  --tt-border-color: var(--tt-gray-dark-a-200);
-  --tt-border-color-tint: var(--tt-gray-dark-a-100);
-  --tt-sidebar-bg-color: var(--tt-gray-dark-100);
-  --tt-scrollbar-color: var(--tt-gray-dark-a-200);
-  --tt-cursor-color: var(--tt-brand-color-400);
-  --tt-selection-color: rgba(122, 82, 255, 0.2);
-  --tt-card-bg-color: var(--tt-gray-dark-50);
-  --tt-card-border-color: var(--tt-gray-dark-a-50);
+  /* Match app --radius; clamp so neobrutalism (0) and large tokens stay valid */
+  --tt-radius-xxs: max(0px, calc(var(--radius) - 10px));
+  --tt-radius-xs: max(0px, calc(var(--radius) - 8px));
+  --tt-radius-sm: max(0px, calc(var(--radius) - 6px));
+  --tt-radius-md: max(0px, calc(var(--radius) - 4px));
+  --tt-radius-lg: max(0px, calc(var(--radius) - 2px));
+  --tt-radius-xl: var(--radius);
 
-  --tt-shadow-elevated-md:
-    0px 16px 48px 0px rgba(0, 0, 0, 0.5), 0px 12px 24px 0px rgba(0, 0, 0, 0.24),
-    0px 6px 8px 0px rgba(0, 0, 0, 0.22), 0px 2px 3px 0px rgba(0, 0, 0, 0.12);
+  --tt-shadow-elevated-md: var(--shadow-lg);
 }
 
 /* Text colors */

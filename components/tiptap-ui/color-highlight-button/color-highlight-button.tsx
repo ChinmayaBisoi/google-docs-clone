@@ -25,7 +25,7 @@ import "@/components/tiptap-ui/color-highlight-button/color-highlight-button.scs
 
 export interface ColorHighlightButtonProps
 	extends Omit<ButtonProps, "type">,
-		UseColorHighlightConfig {
+	UseColorHighlightConfig {
 	/**
 	 * Optional text to display alongside the icon.
 	 */
@@ -130,6 +130,7 @@ export const ColorHighlightButton = forwardRef<HTMLButtonElement, ColorHighlight
 				type="button"
 				variant="ghost"
 				data-active-state={isActive ? "on" : "off"}
+				// biome-ignore lint/a11y/useSemanticElements: <explanation>
 				role="button"
 				tabIndex={-1}
 				disabled={!canColorHighlight}

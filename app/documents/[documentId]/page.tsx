@@ -1,4 +1,4 @@
-import { DocumentEditorRoute } from "@/components/documents/DocumentEditorRoute";
+import { SimpleEditor } from "@/components/tiptap-templates/simple/simple-editor";
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 
@@ -12,5 +12,6 @@ export default async function DocumentPage({
 		redirect("/sign-in");
 	}
 	const { documentId } = await params;
-	return <DocumentEditorRoute documentId={documentId} />;
+
+	return <SimpleEditor />
 }

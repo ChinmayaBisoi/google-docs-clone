@@ -83,6 +83,7 @@ export const HeadingButton = forwardRef<HTMLButtonElement, HeadingButtonProps>(
 				type="button"
 				variant="ghost"
 				data-active-state={isActive ? "on" : "off"}
+				// biome-ignore lint/a11y/useSemanticElements: <explanation>
 				role="button"
 				tabIndex={-1}
 				disabled={!canToggle}

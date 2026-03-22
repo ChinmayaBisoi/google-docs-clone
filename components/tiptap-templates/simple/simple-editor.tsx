@@ -66,6 +66,7 @@ import { MAX_FILE_SIZE, handleImageUpload } from "@/lib/tiptap-utils";
 import "@/components/tiptap-templates/simple/simple-editor.scss";
 
 import content from "@/components/tiptap-templates/simple/data/content.json";
+import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 
 const MainToolbarContent = ({
 	onHighlighterClick,
@@ -128,16 +129,17 @@ const MainToolbarContent = ({
 
 			<ToolbarSeparator />
 
-			<ToolbarGroup>
+			{/* <ToolbarGroup>
 				<ImageUploadButton text="Add" />
-			</ToolbarGroup>
+			</ToolbarGroup> */}
 
 			<Spacer />
 
 			{isMobile && <ToolbarSeparator />}
 
 			<ToolbarGroup>
-				<ThemeToggle />
+				{/* <ThemeToggle /> */}
+				<ThemeSwitcher />
 			</ToolbarGroup>
 		</>
 	);
@@ -233,8 +235,8 @@ export function SimpleEditor() {
 					style={{
 						...(isMobile
 							? {
-									bottom: `calc(100% - ${height - rect.y}px)`,
-								}
+								bottom: `calc(100% - ${height - rect.y}px)`,
+							}
 							: {}),
 					}}
 				>
