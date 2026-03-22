@@ -96,7 +96,7 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 										<Button
 											type="button"
 											size="sm"
-											className="rounded-full bg-[#1a73e8] px-4 text-white hover:bg-[#1557b0] dark:bg-primary dark:text-primary-foreground dark:hover:bg-primary/90"
+											className="rounded-full"
 											aria-label="Copy link to this page"
 											onClick={() => void copyPageUrlToClipboard()}
 										>
