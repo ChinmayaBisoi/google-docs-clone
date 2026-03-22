@@ -13,7 +13,12 @@ export const documentRouter = createTRPCRouter({
 		return ctx.prisma.document.findMany({
 			where: { userId: user.id },
 			orderBy: { updatedAt: "desc" },
-			include: { user: true },
+			select: {
+				id: true,
+				title: true,
+				updatedAt: true,
+				user: { select: { name: true, email: true } },
+			},
 		});
 	}),
 	create: protectedProcedure.mutation(async ({ ctx }) => {
