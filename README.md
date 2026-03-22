@@ -66,6 +66,41 @@ LOCAL_DATABASE_URL="postgresql://$USER@localhost:5432/app_dev"
 
 ---
 
+## Realtime collaboration (Hocuspocus)
+
+The app uses **Yjs** plus a standalone **Hocuspocus** WebSocket server for multi-user editing. **Postgres** stores the serialized Yjs state (`Document.yjsState`). The browser also uses **IndexedDB** (`y-indexeddb`) for offline-first local persistence.
+
+### Env
+
+Set the same values in `.env.local` for Next.js and when running the collab process:
+
+- `COLLAB_JWT_SECRET` — long random string; signs short-lived collab tokens from tRPC and is verified by Hocuspocus.
+- `NEXT_PUBLIC_HOCUSPOCUS_URL` — WebSocket URL the browser uses (for example `ws://127.0.0.1:1234` in dev).
+- Optional: `HOCUSPOCUS_PORT` (default `1234`), `HOCUSPOCUS_ADDRESS` (default `0.0.0.0`).
+
+### Run locally
+
+Terminal 1: `npm run dev`  
+Terminal 2: `npm run collab` (requires `DATABASE_URL` and `COLLAB_JWT_SECRET`).
+
+Or one command: `npm run dev:all`.
+
+### Docker (deploy collab separately)
+
+From the repo root:
+
+```bash
+docker build -f Dockerfile.collab -t gdc-collab .
+docker run --rm -p 1234:1234 \
+  -e DATABASE_URL="postgresql://..." \
+  -e COLLAB_JWT_SECRET="..." \
+  gdc-collab
+```
+
+Point `NEXT_PUBLIC_HOCUSPOCUS_URL` at your deployed host (for example `wss://collab.example.com`).
+
+---
+
 ## Auth (Clerk)
 
 ### File Conventions
@@ -125,6 +160,8 @@ Avoid protecting `/sign-in` and `/sign-up` to prevent redirect loops.
 | `DATABASE_URL`                      | Yes        | Postgres URL — used by Prisma; in dev set to local, in prod to Neon |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (auth) | From [Clerk Dashboard](https://dashboard.clerk.com)                 |
 | `CLERK_SECRET_KEY`                  | Yes (auth) | From Clerk Dashboard                                                |
+| `COLLAB_JWT_SECRET`                 | Yes (collab) | Shared secret for Hocuspocus auth tokens (same for Next + collab server) |
+| `NEXT_PUBLIC_HOCUSPOCUS_URL`      | Yes (collab) | Browser WebSocket URL (for example `ws://127.0.0.1:1234`)            |
 
 
 Copy `.env.example` to `.env.local` and fill in values.
@@ -152,6 +189,9 @@ trpc/
   routers/_app.ts     # Root router
 scripts/
   create-db.sh        # psql script for local DB
+server/
+  hocuspocus.ts       # Yjs WebSocket server (run: npm run collab)
+Dockerfile.collab     # Container image for Hocuspocus only
 proxy.ts              # Clerk auth (Next.js 16 proxy convention)
 ```
 
@@ -192,6 +232,8 @@ Returning `DocumentEditorRoute` with a server-loaded document (for example `crea
 | `npm run db:migrate`  | Run migrations (dev)            |
 | `npm run db:push`     | Push schema to DB (prototyping) |
 | `npm run db:studio`   | Open Prisma Studio              |
+| `npm run collab`      | Start Hocuspocus WebSocket server |
+| `npm run dev:all`     | Next dev + collab (concurrently)  |
 | `npm run check`       | Biome lint + format check       |
 | `npm run check:fix`   | Biome fix all                   |
 

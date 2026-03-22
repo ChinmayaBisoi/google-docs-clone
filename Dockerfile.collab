@@ -1,0 +1,23 @@
+# Hocuspocus WebSocket server (realtime Yjs sync). Build from repo root:
+#   docker build -f Dockerfile.collab -t gdc-collab .
+#
+# Run (set DATABASE_URL, COLLAB_JWT_SECRET, same values as Next.js):
+#   docker run --rm -p 1234:1234 -e DATABASE_URL=... -e COLLAB_JWT_SECRET=... gdc-collab
+
+FROM node:20-bookworm-slim AS base
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+RUN npm ci
+
+COPY prisma ./prisma
+COPY lib ./lib
+COPY server ./server
+COPY tsconfig.json ./
+
+RUN npx prisma generate
+
+ENV NODE_ENV=production
+EXPOSE 1234
+
+CMD ["npx", "tsx", "server/hocuspocus.ts"]
