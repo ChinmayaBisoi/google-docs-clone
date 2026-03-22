@@ -23,7 +23,7 @@ Overview of the starter template configuration and how each piece works.
 ### Production (Neon)
 
 - **Raw SQL (`lib/db.ts`):** `@neondatabase/serverless` (`getSql()`).
-- **Prisma (`lib/prisma.ts`):** `@prisma/adapter-neon` with your **`DATABASE_URL`**. Use Neon’s **pooled** connection string (hostname contains `-pooler`) for the deployed Next.js app. Pooled URLs are not compatible with `node-pg` + `@prisma/adapter-pg` in serverless; the Neon adapter avoids that.
+- **Prisma (`lib/prisma.ts`):** `@prisma/adapter-neon` **`PrismaNeonHttp`** and your **`DATABASE_URL`**. Use Neon’s **pooled** URL (hostname contains `-pooler`) for the deployed Next.js app. Pooled URLs are not compatible with `node-pg` + `@prisma/adapter-pg` in serverless.
 
 ### Development (Local Postgres)
 
@@ -33,7 +33,7 @@ Overview of the starter template configuration and how each piece works.
 ### Prisma ORM
 
 - **Runtime:** `DATABASE_URL` only for the app (no `LOCAL_DATABASE_URL`). Local dev: set `DATABASE_URL` to your local Postgres URL.
-- **Client:** `lib/prisma.ts` exports a singleton `PrismaClient` with the Neon driver adapter.
+- **Client:** `lib/prisma.ts` exports a singleton `PrismaClient` with **`PrismaNeonHttp`** (HTTPS to Neon, no WebSockets). Interactive `prisma.$transaction(async (tx) => …)` is not supported by this driver; array/batch `$transaction([…])` for single statements may still work for simple cases.
 - **CLI (`prisma.config.ts`):** Uses `DIRECT_URL` when set (Neon’s **direct**, non-pooler URL) for `migrate`, `db push`, etc. If `DIRECT_URL` is unset, the CLI falls back to `DATABASE_URL` (fine for local Postgres).
 - **tRPC:** `ctx.prisma` in all procedures. Use `prismaHealth` in `_app.ts` to verify DB connectivity from the app.
 - **Migrations:** Run `npm run db:migrate` after schema changes. Use `db:push` for quick prototyping without migration files.
@@ -75,7 +75,7 @@ Use this checklist when deploying the Next.js app (for example [Vercel](https://
 
 1. **Build command:** `npm run build` (default on most hosts). **Output:** Next.js.
 2. **Install:** `npm install` (postinstall runs `prisma generate`).
-3. **Node:** Use **Node 20+** on the host. Prisma’s Neon adapter talks to Neon over WebSockets; `lib/prisma.ts` sets `neonConfig.webSocketConstructor` from the **`ws`** package because many Node 20 deployments do not expose a global `WebSocket` (Node 22+ does). `next.config.ts` includes `serverExternalPackages: ["ws"]` so the bundler does not break that dependency.
+3. **Node:** Use **Node 20+** on the host. `lib/prisma.ts` uses **`PrismaNeonHttp`**: Neon’s **SQL over HTTPS** path (plain `fetch`), which is reliable on Vercel. It avoids WebSocket + `ws`, which can fail in serverless even when `next start` works locally.
 4. **Environment variables** (minimum):
    - **`DATABASE_URL`:** Neon **pooled** URL from the Neon dashboard (hostname includes `-pooler`). The app’s Prisma client expects this for serverless.
    - **`DIRECT_URL`** (recommended for Neon): **Direct** URL (no `-pooler`) for Prisma CLI only. Add it if you run `prisma migrate deploy` / `db push` from CI against Neon; `prisma.config.ts` prefers `DIRECT_URL` over `DATABASE_URL` for those commands. Optional if your CLI always uses a direct connection another way.

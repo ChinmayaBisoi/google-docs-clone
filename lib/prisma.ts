@@ -1,24 +1,18 @@
-import { PrismaNeon } from "@prisma/adapter-neon";
-import { neonConfig } from "@neondatabase/serverless";
+import { PrismaNeonHttp } from "@prisma/adapter-neon";
 import { PrismaClient } from "@/generated/prisma/client";
-import ws from "ws";
 
 const globalForPrisma = globalThis as unknown as {
 	prisma: PrismaClient | undefined;
 };
-
-// PrismaNeon uses the Neon Pool over WebSockets. Node 20 and earlier have no global WebSocket
-// (Vercel often defaults to Node 20), so the driver cannot connect without this. See @prisma/adapter-neon README.
-neonConfig.webSocketConstructor = ws;
 
 function createPrismaClient(): PrismaClient {
 	const connectionString = process.env.DATABASE_URL;
 	if (!connectionString) {
 		throw new Error("DATABASE_URL is not set");
 	}
-	// Neon pooled URLs (PgBouncer transaction mode) break node-pg prepared statements.
-	// Neon's serverless driver + this adapter is the supported path for serverless / Vercel.
-	const adapter = new PrismaNeon({ connectionString });
+	// Neon pooled URLs break node-pg; WebSocket Pool + `ws` is flaky on Vercel serverless.
+	// HTTP driver uses fetch() only (works reliably on Vercel). Interactive $transaction(fn) is unsupported.
+	const adapter = new PrismaNeonHttp(connectionString, {});
 	return new PrismaClient({ adapter });
 }
 
