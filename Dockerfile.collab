@@ -1,7 +1,8 @@
 # Hocuspocus WebSocket server (realtime Yjs sync). Build from repo root:
 #   docker build -f Dockerfile.collab -t gdc-collab .
 #
-# Run (set DATABASE_URL, COLLAB_JWT_SECRET, same values as Next.js):
+# Run (set DATABASE_URL, COLLAB_JWT_SECRET, same values as Next.js). No server/.env in the image;
+# inject env with -e/--env-file or mount a root .env.production.
 #   docker run --rm -p 1234:1234 -e DATABASE_URL=... -e COLLAB_JWT_SECRET=... gdc-collab
 
 FROM node:20-bookworm-slim AS base

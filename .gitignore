@@ -45,5 +45,8 @@ next-env.d.ts
 
 .agent
 .agents
+
+# Cursor debug ingest logs (local only)
+.cursor/debug*.log
 # clerk configuration (can include secrets)
 /.clerk/

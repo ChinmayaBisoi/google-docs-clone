@@ -1,12 +1,20 @@
-import "dotenv/config";
-
-import { Server } from "@hocuspocus/server";
 import { PrismaClient } from "@/generated/prisma/client";
+import { Server } from "@hocuspocus/server";
 import { PrismaPg } from "@prisma/adapter-pg";
 import { Pool } from "pg";
 import * as Y from "yjs";
 
-import { type CollabJwtPayload, verifyCollabToken } from "@/lib/collab-jwt";
+import { type CollabJwtPayload, ensureCollabJwtSecret, verifyCollabToken } from "@/lib/collab-jwt";
+
+// Repo root `.env*` (via `ensureCollabJwtSecret` in collab-jwt). No separate `server/.env`.
+// Docker/K8s: pass `-e DATABASE_URL` / `-e COLLAB_JWT_SECRET` (or use a mounted root `.env.production`).
+ensureCollabJwtSecret();
+
+if (!process.env.COLLAB_JWT_SECRET?.trim()) {
+	throw new Error(
+		"COLLAB_JWT_SECRET is not set. Use the same value as Next.js (repo root .env or container env)."
+	);
+}
 
 const connectionString = process.env.DATABASE_URL;
 if (!connectionString) {
@@ -18,22 +26,50 @@ const prisma = new PrismaClient({ adapter: new PrismaPg(hocuspocusPool) });
 const port = Number(process.env.HOCUSPOCUS_PORT ?? 1234);
 const address = process.env.HOCUSPOCUS_ADDRESS ?? "0.0.0.0";
 
+const collabDebugLogs = process.env.NODE_ENV !== "production";
+
 const server = new Server({
 	port,
 	address,
 	name: "google-docs-collab",
+	async onUpgrade({ request }) {
+		if (collabDebugLogs) {
+			console.log("[collab] WebSocket upgrade", request.url ?? "");
+		}
+	},
+	async onConnect({ documentName, socketId }) {
+		if (collabDebugLogs) {
+			console.log("[collab] client connected", { documentName, socketId });
+		}
+	},
+	async onDisconnect({ documentName, socketId }) {
+		if (collabDebugLogs) {
+			console.log("[collab] client disconnected", { documentName, socketId });
+		}
+	},
 	async onAuthenticate({ token, documentName }) {
-		if (!token) {
+		const trimmed = token?.trim();
+		if (!trimmed) {
 			throw new Error("Unauthorized");
 		}
 		let payload: CollabJwtPayload;
 		try {
-			payload = await verifyCollabToken(token);
-		} catch {
+			payload = await verifyCollabToken(trimmed);
+		} catch (err) {
+			if (process.env.NODE_ENV !== "production" && err instanceof Error) {
+				console.error(
+					"[onAuthenticate] JWT verify failed:",
+					err.message,
+					err.cause instanceof Error ? err.cause.message : ""
+				);
+			}
 			throw new Error("Unauthorized");
 		}
 		if (payload.documentId !== documentName) {
 			throw new Error("Forbidden");
+		}
+		if (collabDebugLogs) {
+			console.log("[collab] authenticated", { documentName, userId: payload.sub });
 		}
 		return {
 			user: {

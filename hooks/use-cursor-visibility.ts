@@ -34,7 +34,9 @@ export function useCursorVisibility({ editor, overlayHeight = 0 }: CursorVisibil
 
 	useEffect(() => {
 		const ensureCursorVisibility = () => {
-			if (!editor) return;
+			// When editorView is null (not mounted yet), TipTap's `editor.view` is a Proxy that throws
+			// on `hasFocus` and other keys. `editor.isDestroyed` is true in that state.
+			if (!editor || editor.isDestroyed) return;
 
 			const { state, view } = editor;
 			if (!view.hasFocus()) return;

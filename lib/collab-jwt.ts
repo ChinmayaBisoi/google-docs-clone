@@ -1,7 +1,48 @@
+import { existsSync, readFileSync } from "node:fs";
+import { join } from "node:path";
+import { loadEnvConfig } from "@next/env";
+import { parse } from "dotenv";
 import { SignJWT, jwtVerify } from "jose";
 
+let collabEnvEnsured = false;
+
+/**
+ * Loads repo-root env the same way Next does, then falls back to reading
+ * `.env.local` / `.env` from disk if `COLLAB_JWT_SECRET` is missing or blank.
+ *
+ * `@next/env` merges so the first file wins per key; an empty value in
+ * `.env.development` can block a real secret in `.env`. The standalone collab
+ * process must resolve the same secret as the Next server or JWT verify fails.
+ */
+export function ensureCollabJwtSecret(): void {
+	if (collabEnvEnsured) {
+		return;
+	}
+	collabEnvEnsured = true;
+
+	loadEnvConfig(process.cwd(), process.env.NODE_ENV !== "production");
+
+	if (process.env.COLLAB_JWT_SECRET?.trim()) {
+		return;
+	}
+
+	for (const name of [".env.local", ".env"] as const) {
+		const envPath = join(process.cwd(), name);
+		if (!existsSync(envPath)) {
+			continue;
+		}
+		const parsed = parse(readFileSync(envPath, "utf8"));
+		const s = parsed.COLLAB_JWT_SECRET;
+		if (typeof s === "string" && s.trim()) {
+			process.env.COLLAB_JWT_SECRET = s;
+			return;
+		}
+	}
+}
+
 function getSecret(): Uint8Array {
-	const s = process.env.COLLAB_JWT_SECRET;
+	ensureCollabJwtSecret();
+	const s = process.env.COLLAB_JWT_SECRET?.trim();
 	if (!s) {
 		throw new Error("COLLAB_JWT_SECRET is not set");
 	}
