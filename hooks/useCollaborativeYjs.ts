@@ -24,6 +24,7 @@ export function useCollaborativeYjs(documentId: string | undefined): Collaborati
 	const [provider, setProvider] = useState<HocuspocusProvider | null>(null);
 
 	const tokenMutation = useMutation(trpc.document.getCollabToken.mutationOptions());
+	const { mutate: fetchCollabToken, reset: resetTokenMutation } = tokenMutation;
 
 	useEffect(() => {
 		if (!documentId) return;
@@ -35,13 +36,13 @@ export function useCollaborativeYjs(documentId: string | undefined): Collaborati
 
 	useEffect(() => {
 		if (!documentId || !wsUrl) {
-			tokenMutation.reset();
+			resetTokenMutation();
 			setProvider(null);
 			return;
 		}
-		tokenMutation.reset();
-		tokenMutation.mutate({ documentId });
-	}, [documentId, wsUrl, tokenMutation]);
+		resetTokenMutation();
+		fetchCollabToken({ documentId });
+	}, [documentId, wsUrl, fetchCollabToken, resetTokenMutation]);
 
 	useEffect(() => {
 		if (!documentId || !wsUrl || !tokenMutation.isSuccess || !tokenMutation.data?.token) {

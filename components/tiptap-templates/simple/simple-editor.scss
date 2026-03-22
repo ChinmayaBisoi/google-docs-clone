@@ -83,8 +83,8 @@ body,
   }
 }
 
-/* Collaboration cursors (y-prosemirror / Tiptap CollaborationCursor) */
-.collaboration-cursor__caret {
+/* Collaboration carets (@tiptap/extension-collaboration-caret / y-tiptap) */
+.collaboration-carets__caret {
   position: relative;
   margin-left: -1px;
   margin-right: -1px;
@@ -94,7 +94,7 @@ body,
   pointer-events: none;
 }
 
-.collaboration-cursor__label {
+.collaboration-carets__label {
   position: absolute;
   top: -1.4em;
   left: -1px;

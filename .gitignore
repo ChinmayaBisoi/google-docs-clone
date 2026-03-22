@@ -40,6 +40,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Prisma 7 generated client (see postinstall: prisma generate)
+/generated
+
 .agent
 .agents
 # clerk configuration (can include secrets)

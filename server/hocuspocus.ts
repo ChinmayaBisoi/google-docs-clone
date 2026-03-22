@@ -1,12 +1,19 @@
 import "dotenv/config";
 
 import { Server } from "@hocuspocus/server";
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from "@/generated/prisma/client";
+import { PrismaPg } from "@prisma/adapter-pg";
+import { Pool } from "pg";
 import * as Y from "yjs";
 
 import { type CollabJwtPayload, verifyCollabToken } from "@/lib/collab-jwt";
 
-const prisma = new PrismaClient();
+const connectionString = process.env.DATABASE_URL;
+if (!connectionString) {
+	throw new Error("DATABASE_URL is not set");
+}
+const hocuspocusPool = new Pool({ connectionString });
+const prisma = new PrismaClient({ adapter: new PrismaPg(hocuspocusPool) });
 
 const port = Number(process.env.HOCUSPOCUS_PORT ?? 1234);
 const address = process.env.HOCUSPOCUS_ADDRESS ?? "0.0.0.0";

@@ -2,7 +2,7 @@
 
 import type { HocuspocusProvider } from "@hocuspocus/provider";
 import { Collaboration } from "@tiptap/extension-collaboration";
-import CollaborationCursor from "@tiptap/extension-collaboration-cursor";
+import { CollaborationCaret } from "@tiptap/extension-collaboration-caret";
 import { Highlight } from "@tiptap/extension-highlight";
 import { Image } from "@tiptap/extension-image";
 import { TaskItem, TaskList } from "@tiptap/extension-list";
@@ -48,6 +48,8 @@ import { UndoRedoButton } from "@/components/tiptap-ui/undo-redo-button";
 import { ArrowLeftIcon } from "@/components/tiptap-icons/arrow-left-icon";
 import { HighlighterIcon } from "@/components/tiptap-icons/highlighter-icon";
 import { LinkIcon } from "@/components/tiptap-icons/link-icon";
+
+import { Loader2 } from "lucide-react";
 
 import { useCursorVisibility } from "@/hooks/use-cursor-visibility";
 import { useIsBreakpoint } from "@/hooks/use-is-breakpoint";
@@ -203,7 +205,7 @@ export function SimpleEditorCollaborativePane({
 					document: ydoc,
 					provider,
 				}),
-				CollaborationCursor.configure({
+				CollaborationCaret.configure({
 					provider,
 					user: {
 						name: cursorName,
@@ -238,7 +240,7 @@ export function SimpleEditorCollaborativePane({
 	const overlayHeight = isMobile ? toolbarH : chromeH + toolbarH;
 
 	const rect = useCursorVisibility({
-		editor,
+		editor: editor ?? undefined,
 		overlayHeight,
 	});
 
@@ -247,6 +249,14 @@ export function SimpleEditorCollaborativePane({
 			setMobileView("main");
 		}
 	}, [isMobile, mobileView]);
+
+	if (!editor) {
+		return (
+			<div className="flex min-h-[50vh] flex-1 items-center justify-center">
+				<Loader2 className="size-10 animate-spin text-primary" aria-label="Loading editor" />
+			</div>
+		);
+	}
 
 	return (
 		<EditorContext.Provider value={{ editor }}>

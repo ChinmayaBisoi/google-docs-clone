@@ -1,7 +1,7 @@
 import "server-only";
 
 import { currentUser } from "@clerk/nextjs/server";
-import type { PrismaClient } from "@prisma/client";
+import type { PrismaClient } from "@/generated/prisma/client";
 
 export async function syncClerkUser(prisma: PrismaClient) {
 	const clerkUser = await currentUser();
