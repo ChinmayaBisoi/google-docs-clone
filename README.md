@@ -113,8 +113,11 @@ Deploy Hocuspocus as a **second** [Render](https://render.com) **Web Service** (
    - `DATABASE_URL` — same Postgres URL as the app (e.g. Neon).
    - `COLLAB_JWT_SECRET` — **exactly the same** string as on the Next.js service.
 6. **Next.js service:** Set `NEXT_PUBLIC_HOCUSPOCUS_URL` to `wss://<collab-service-hostname>` (the collab service’s public URL, `wss` not `ws`). Redeploy Next so the client bundle picks up the change.
+7. **Health check (Render):** Set the service **health check path** to **`/health`**. The collab server responds with `200` and JSON `{"status":"ok","service":"google-docs-collab"}` (plain HTTP on the same host and port as the WebSocket upgrade).
 
-**Notes:** Free instances **spin down** after idle; WebSockets will drop until users reconnect. If a deploy fails health checks, adjust or relax the HTTP health check for this service (a WS-only process may not serve a useful `GET /`).
+**Notes:** Free instances **spin down** after idle; WebSockets will drop until users reconnect.
+
+**From the Next.js app:** Use the public tRPC query **`collabHealth`** (same origin as your API). It performs `GET /health` on the collab host derived from `NEXT_PUBLIC_HOCUSPOCUS_URL` (`wss` → `https`, `ws` → `http`). Existing queries **`dbHealth`** and **`prismaHealth`** can be used to verify the database from Next.
 
 ---
 

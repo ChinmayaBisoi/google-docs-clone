@@ -32,6 +32,20 @@ const server = new Server({
 	port,
 	address,
 	name: "google-docs-collab",
+	async onRequest({ request, response }) {
+		const pathname = new URL(request.url ?? "/", "http://localhost").pathname;
+		if (pathname === "/health") {
+			const body = JSON.stringify({ ok: true, service: "collab" });
+			response.writeHead(200, {
+				"Content-Type": "application/json; charset=utf-8",
+				"Content-Length": Buffer.byteLength(body),
+				"Cache-Control": "no-store",
+			});
+			response.end(body);
+			// Hocuspocus: reject with empty error so the default HTTP body is not sent.
+			throw null;
+		}
+	},
 	async onUpgrade({ request }) {
 		if (collabDebugLogs) {
 			console.log("[collab] WebSocket upgrade", request.url ?? "");

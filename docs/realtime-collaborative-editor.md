@@ -13,7 +13,8 @@ The stack below is **implemented**. Operational runbook (env, scripts, Docker) l
 | Editor UI | [`components/tiptap-templates/simple/simple-editor.tsx`](../components/tiptap-templates/simple/simple-editor.tsx), [`SimpleEditorCollaborativePane.tsx`](../components/tiptap-templates/simple/SimpleEditorCollaborativePane.tsx) |
 | Yjs + IndexedDB + provider | [`hooks/useCollaborativeYjs.ts`](../hooks/useCollaborativeYjs.ts) |
 | Collab JWT (tRPC) | [`lib/collab-jwt.ts`](../lib/collab-jwt.ts), [`trpc/routers/document.ts`](../trpc/routers/document.ts) (`getCollabToken`, `getById` with `isOwner`, `updateTitle`) |
-| Hocuspocus server | [`server/hocuspocus.ts`](../server/hocuspocus.ts), [`Dockerfile.collab`](../Dockerfile.collab) |
+| Hocuspocus server | [`server/hocuspocus.ts`](../server/hocuspocus.ts) (`GET /health` for probes), [`Dockerfile.collab`](../Dockerfile.collab) |
+| Collab reachability from Next | tRPC `collabHealth` in [`trpc/routers/_app.ts`](../trpc/routers/_app.ts); [`lib/collab-health.ts`](../lib/collab-health.ts) maps WS URL to HTTP origin |
 | Durability | Postgres `Document.yjsState` only (legacy `Document.content` removed). Client: `y-indexeddb` per `documentId`. |
 | Shareable route | [`app/documents/[documentId]/page.tsx`](../app/documents/[documentId]/page.tsx) |
 | Owner vs guest UI | [`components/documents/SimpleEditorChromeHeader.tsx`](../components/documents/SimpleEditorChromeHeader.tsx) (star hidden for non-owners; title rename UI not wired yet) |
