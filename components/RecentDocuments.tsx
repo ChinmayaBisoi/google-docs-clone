@@ -103,8 +103,8 @@ export function RecentDocuments() {
 			<div className="flex items-center justify-between">
 				<h2 className="text-sm font-medium text-foreground">Recent documents</h2>
 				<div className="flex items-center gap-2">
-					<OwnedByFilter />
-					<SortButton />
+					{/* <OwnedByFilter />
+					<SortButton /> */}
 				</div>
 			</div>
 
@@ -129,25 +129,25 @@ function RecentDocumentsSkeleton() {
 	);
 }
 
-function OwnedByFilter() {
-	return (
-		<button
-			type="button"
-			className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
-		>
-			Owned by anyone
-			<svg
-				className="size-4 text-current"
-				viewBox="0 0 24 24"
-				fill="currentColor"
-				aria-hidden="true"
-			>
-				<title>Expand</title>
-				<path d="M7 10l5 5 5-5z" />
-			</svg>
-		</button>
-	);
-}
+// function OwnedByFilter() {
+// 	return (
+// 		<button
+// 			type="button"
+// 			className="flex items-center gap-1 rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+// 		>
+// 			Owned by anyone
+// 			<svg
+// 				className="size-4 text-current"
+// 				viewBox="0 0 24 24"
+// 				fill="currentColor"
+// 				aria-hidden="true"
+// 			>
+// 				<title>Expand</title>
+// 				<path d="M7 10l5 5 5-5z" />
+// 			</svg>
+// 		</button>
+// 	);
+// }
 
 function SortButton() {
 	return (
