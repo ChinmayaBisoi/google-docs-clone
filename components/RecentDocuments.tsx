@@ -1,12 +1,14 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { type ReactNode, useMemo } from "react";
 
 import { SignInModal } from "@/components/auth/SignInModal";
 import { DocumentOwnerChromeActions } from "@/components/documents/DocumentOwnerChromeActions";
+import { useLandingDocumentSearch } from "@/components/landing/LandingDocumentSearchProvider";
 import type { RecentDocumentListItem } from "@/components/recent-documents-types";
 import { Button } from "@/components/ui/button";
 import { copyDocumentUrlToClipboard } from "@/lib/copy-page-url";
+import { filterDocumentsBySearchQuery } from "@/lib/filter-documents-by-query";
 import { formatRelativeTime } from "@/lib/format-relative-time";
 import { useTRPC } from "@/trpc/client";
 import { useUser } from "@clerk/nextjs";
@@ -17,6 +19,9 @@ import Link from "next/link";
 export function RecentDocuments() {
 	const { isLoaded, isSignedIn } = useUser();
 	const trpc = useTRPC();
+	const landingSearch = useLandingDocumentSearch();
+	const searchQuery = landingSearch?.debouncedQuery ?? "";
+
 	const listQuery = useQuery({
 		...trpc.document.list.queryOptions(),
 		enabled: isLoaded && isSignedIn,
@@ -31,6 +36,14 @@ export function RecentDocuments() {
 		lastOpened: formatRelativeTime(d.updatedAt),
 		owner: d.user.name ?? d.user.email ?? "You",
 	}));
+
+	const filteredDocuments = useMemo(
+		() => filterDocumentsBySearchQuery(documents, searchQuery),
+		[documents, searchQuery]
+	);
+
+	const searchTrimmed = searchQuery.trim();
+	const hasActiveSearch = searchTrimmed.length > 0;
 
 	let body: ReactNode;
 
@@ -70,7 +83,17 @@ export function RecentDocuments() {
 			</div>
 		);
 	} else if (documents.length > 0) {
-		body = <DocumentList documents={documents} />;
+		if (hasActiveSearch && filteredDocuments.length === 0) {
+			body = (
+				<SearchNoMatches
+					onClear={() => {
+						landingSearch?.clearQuery();
+					}}
+				/>
+			);
+		} else {
+			body = <DocumentList documents={filteredDocuments} />;
+		}
 	} else {
 		body = <EmptyState title="No documents yet" />;
 	}
@@ -138,6 +161,17 @@ function SortButton() {
 				<path d="M7 10l5 5 5-5z" />
 			</svg>
 		</button>
+	);
+}
+
+function SearchNoMatches({ onClear }: { onClear: () => void }) {
+	return (
+		<div className="mt-2 flex flex-col items-center justify-center py-20 text-center">
+			<p className="max-w-sm text-sm text-muted-foreground">No documents match your search.</p>
+			<Button type="button" variant="secondary" size="sm" className="mt-4" onClick={onClear}>
+				Clear search
+			</Button>
+		</div>
 	);
 }
 
