@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { SignInModal } from "@/components/auth/SignInModal";
+import { DocumentOwnerChromeActions } from "@/components/documents/DocumentOwnerChromeActions";
 import type { RecentDocumentListItem } from "@/components/recent-documents-types";
 import { Button } from "@/components/ui/button";
 import { copyDocumentUrlToClipboard } from "@/lib/copy-page-url";
@@ -26,6 +27,7 @@ export function RecentDocuments() {
 	const documents: RecentDocumentListItem[] = list.map((d) => ({
 		id: d.id,
 		title: d.title,
+		pinned: d.pinned,
 		lastOpened: formatRelativeTime(d.updatedAt),
 		owner: d.user.name ?? d.user.email ?? "You",
 	}));
@@ -158,7 +160,9 @@ function DocumentRow({ document }: { document: RecentDocumentListItem }) {
 			>
 				<FileText className="size-6 shrink-0 text-primary" aria-hidden />
 				<span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-center sm:gap-4">
-					<span className="truncate text-sm font-medium text-foreground">{document.title}</span>
+					<span className="flex min-w-0 items-center gap-1.5">
+						<span className="truncate text-sm font-medium text-foreground">{document.title}</span>
+					</span>
 					<span className="truncate text-xs text-muted-foreground sm:hidden">
 						{document.lastOpened}
 					</span>
@@ -170,6 +174,12 @@ function DocumentRow({ document }: { document: RecentDocumentListItem }) {
 					</span>
 				</span>
 			</Link>
+			<DocumentOwnerChromeActions
+				documentId={document.id}
+				title={document.title}
+				pinned={document.pinned}
+				variant="list"
+			/>
 			<Button
 				type="button"
 				size="sm"

@@ -1,6 +1,7 @@
 "use client";
 
 import { Logo } from "@/components/Logo";
+import { DocumentTitleOwnerControls } from "@/components/documents/DocumentTitleOwnerControls";
 import { Button } from "@/components/ui/button";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
@@ -11,7 +12,13 @@ import { DocumentEditorMenubar } from "./DocumentEditorMenubar";
 import { DocumentEditorRulerLayout } from "./DocumentEditorRulerLayout";
 import type { DocumentEditorShellProps } from "./document-types";
 
-export function DocumentEditorShell({ title, initialPlainText }: DocumentEditorShellProps) {
+export function DocumentEditorShell({
+	documentId,
+	title,
+	initialPlainText,
+	isOwner,
+	pinned,
+}: DocumentEditorShellProps) {
 	useEffect(() => {
 		document.title = `${title} - Google Docs Clone`;
 	}, [title]);
@@ -35,29 +42,16 @@ export function DocumentEditorShell({ title, initialPlainText }: DocumentEditorS
 					</Link>
 				</Button>
 				<div className="flex min-w-0 flex-1 flex-col justify-center gap-0.5">
-					<div className="flex min-w-0 items-center gap-2">
-						<h1 className="truncate text-lg font-normal text-[#202124] dark:text-foreground">
-							{title}
-						</h1>
-						<button
-							type="button"
-							className="shrink-0 rounded p-1 text-[#5f6368] hover:bg-black/6 dark:text-muted-foreground dark:hover:bg-white/10"
-							aria-label="Star"
-						>
-							<svg
-								className="size-5"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								aria-hidden
-							>
-								<title>Star</title>
-								<path
-									strokeWidth="2"
-									d="M12 3l2.09 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21 8 14.14l-5-4.87 6.91-1.01L12 3z"
-								/>
-							</svg>
-						</button>
+					<div className="flex min-w-0 items-center gap-1">
+						<div className="min-w-0 flex-1">
+							<DocumentTitleOwnerControls
+								documentId={documentId}
+								title={title}
+								pinned={pinned}
+								isOwner={isOwner}
+								documentTitleClassName="text-left text-lg"
+							/>
+						</div>
 					</div>
 					<div className="flex items-center gap-1 text-xs text-[#5f6368] dark:text-muted-foreground">
 						<span className="truncate">In My Documents</span>

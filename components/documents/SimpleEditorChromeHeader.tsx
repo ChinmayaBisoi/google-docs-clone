@@ -3,17 +3,16 @@
 import { LogoLong } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
 import { copyPageUrlToClipboard } from "@/lib/copy-page-url";
-import { cn } from "@/lib/utils";
 import { useTRPC } from "@/trpc/client";
 import { useAuth } from "@clerk/nextjs";
 import { useQuery } from "@tanstack/react-query";
-import { Share2, Star } from "lucide-react";
+import { Share2 } from "lucide-react";
 import Link from "next/link";
 import { forwardRef, useEffect } from "react";
 
 import { CollaborationPresenceAvatars } from "@/components/documents/CollaborationPresenceAvatars";
+import { DocumentTitleOwnerControls } from "@/components/documents/DocumentTitleOwnerControls";
 import type { SimpleEditorChromeHeaderProps } from "@/components/documents/simple-editor-chrome-types";
-import { usePersistedDocumentStar } from "@/components/documents/usePersistedDocumentStar";
 import { ThemeSwitcher } from "../ThemeSwitcher";
 import { NavbarUserMenu } from "../auth/NavbarUserMenu";
 
@@ -34,8 +33,7 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 		})();
 
 		const isOwner = docQuery.data?.isOwner ?? false;
-
-		const { starred, toggle } = usePersistedDocumentStar(documentId);
+		const pinned = docQuery.data?.pinned ?? false;
 
 		useEffect(() => {
 			document.title = `${displayTitle} - Google Docs Clone`;
@@ -60,39 +58,27 @@ export const SimpleEditorChromeHeader = forwardRef<HTMLDivElement, SimpleEditorC
 						<div className="w-0.5 h-8 my-auto bg-border" />
 						<div className="flex min-w-0 flex-1 items-center px-2 py-1 sm:px-3">
 							<div className="grid min-w-0 flex-1 grid-cols-[1fr_minmax(0,1fr)_1fr] items-center gap-2">
-								<div
-									id="docs-titlebar-container"
-									className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden"
-								>
-									<div
-										id="docs-titlebar"
-										className="min-w-0 truncate text-center text-base font-normal text-[#202124] dark:text-foreground"
+								{documentId ? (
+									<DocumentTitleOwnerControls
+										documentId={documentId}
 										title={displayTitle}
+										pinned={pinned}
+										isOwner={isOwner}
+									/>
+								) : (
+									<div
+										id="docs-titlebar-container"
+										className="flex min-w-0 max-w-full items-center gap-1 overflow-hidden"
 									>
-										{displayTitle}
-									</div>
-									{isOwner && (
-										<Button
-											type="button"
-											variant="ghost"
-											size="icon-sm"
-											className={cn(
-												"shrink-0 text-[#5f6368] dark:text-muted-foreground",
-												starred && "text-amber-500 hover:text-amber-600 dark:text-amber-400"
-											)}
-											aria-label={starred ? "Remove from starred" : "Add to starred"}
-											aria-pressed={starred}
-											onClick={toggle}
+										<div
+											id="docs-titlebar"
+											className="min-w-0 truncate text-center text-base font-normal text-[#202124] dark:text-foreground"
+											title={displayTitle}
 										>
-											<Star
-												className="size-5"
-												fill={starred ? "currentColor" : "none"}
-												strokeWidth={2}
-												aria-hidden
-											/>
-										</Button>
-									)}
-								</div>
+											{displayTitle}
+										</div>
+									</div>
+								)}
 								<div className="flex min-w-0 justify-center justify-self-center overflow-hidden px-1">
 									<CollaborationPresenceAvatars provider={collabProvider} />
 								</div>

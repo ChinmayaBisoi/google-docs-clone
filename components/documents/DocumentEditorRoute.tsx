@@ -33,5 +33,13 @@ export function DocumentEditorRoute({ documentId }: DocumentEditorRouteProps) {
 		);
 	}
 
-	return <DocumentEditorShell title={query.data.title} initialPlainText="" />;
+	return (
+		<DocumentEditorShell
+			documentId={documentId}
+			title={query.data.title}
+			initialPlainText=""
+			isOwner={query.data.isOwner}
+			pinned={query.data.pinned}
+		/>
+	);
 }
