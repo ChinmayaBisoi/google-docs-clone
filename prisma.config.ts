@@ -1,7 +1,7 @@
 import "dotenv/config";
 import { defineConfig, env } from "prisma/config";
 
-/** Supabase (or any Postgres): direct / session URL for CLI; runtime uses `DATABASE_URL` (Prisma adapter manages the driver). */
+/** Neon (or any Postgres): non-pooled URL for Prisma CLI when set; else `DATABASE_URL`. Runtime app uses `DATABASE_URL` in `lib/prisma.ts`. */
 function prismaCliDatabaseUrl(): string {
 	const direct = process.env.DIRECT_URL;
 	if (direct) return direct;

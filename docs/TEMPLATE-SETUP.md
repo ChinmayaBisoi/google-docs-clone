@@ -18,10 +18,10 @@ Overview of the starter template configuration and how each piece works.
 
 ## Database
 
-### Production
+### Production (Neon)
 
 - **Driver:** `pg` (Prisma uses `@prisma/adapter-pg` with a connection string; raw SQL uses `pg.Client` via `getSql()` in `lib/db.ts`)
-- **Config:** `DATABASE_URL` in env (Supabase transaction pooler + `?pgbouncer=true`, or any Postgres URL)
+- **Config:** In [Neon](https://console.neon.tech), use the **pooled** connection string for **`DATABASE_URL`** (hostname ends with `-pooler`, include `sslmode=require`). Set **`DIRECT_URL`** to the **direct** (non-pooled) string for Prisma CLI (`migrate`, `db push`); see `prisma.config.ts`.
 
 ### Development (Local Postgres)
 
@@ -29,7 +29,7 @@ Overview of the starter template configuration and how each piece works.
 
 ### Prisma ORM
 
-- **Config:** **`DATABASE_URL`** for all environments.
+- **Config:** **`DATABASE_URL`** at runtime. For Neon production, also set **`DIRECT_URL`** for migrations (see `prisma.config.ts`).
 - **Client:** `lib/prisma.ts` exports a singleton `prisma` instance (avoids hot-reload connection exhaustion).
 - **tRPC:** `ctx.prisma` available in all procedures. See `prismaHealth` in `_app.ts` for usage.
 - **Migrations:** Run `npm run db:migrate` after schema changes. Use `db:push` for quick prototyping without migration files.
@@ -114,7 +114,8 @@ Avoid protecting `/sign-in` and `/sign-up` to prevent redirect loops.
 
 | Variable | Required | Description |
 | -------- | -------- | ----------- |
-| `DATABASE_URL` | Yes | Postgres URL — Prisma, raw SQL, collab; dev: local; prod: often Supabase pooler (6543) |
+| `DATABASE_URL` | Yes | Postgres URL — Prisma, raw SQL, collab; dev: local; prod (Neon): **pooled** connection |
+| `DIRECT_URL` | Optional (recommended on Neon) | **Direct** Postgres URL for Prisma CLI only; see `prisma.config.ts` |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (auth) | From [Clerk Dashboard](https://dashboard.clerk.com) |
 | `CLERK_SECRET_KEY` | Yes (auth) | From Clerk Dashboard |
 

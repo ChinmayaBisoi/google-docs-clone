@@ -20,10 +20,10 @@ Overview of the starter template configuration and how each piece works.
 
 ## Database
 
-### Production (Supabase)
+### Production (Neon)
 
 - **Raw SQL (`lib/db.ts`):** singleton **`pg.Client`** and a tagged-template helper (`getSql()`).
-- **Prisma (`lib/prisma.ts`):** **`PrismaPg({ connectionString: DATABASE_URL })`**. No app-owned **`pg.Pool`**. On Supabase, use the **transaction pooler** (port **6543**) for the deployed Next.js app and add **`?pgbouncer=true`** for Prisma with PgBouncer.
+- **Prisma (`lib/prisma.ts`):** **`PrismaPg({ connectionString: DATABASE_URL })`**. No app-owned **`pg.Pool`**. On Neon, point **`DATABASE_URL`** at the **pooled** connection (hostname includes **`-pooler`**, with **`sslmode=require`** in the query string).
 
 ### Development (Local Postgres)
 
@@ -33,7 +33,7 @@ Overview of the starter template configuration and how each piece works.
 
 - **Runtime:** **`DATABASE_URL`** in every environment.
 - **Client:** `lib/prisma.ts` passes **`PoolConfig`** into **`PrismaPg`** (Prisma owns the driver). Interactive `prisma.$transaction(async (tx) => …)` is supported.
-- **CLI (`prisma.config.ts`):** Uses `DIRECT_URL` when set (Supabase **direct** host, port **5432**, or session pooler) for `migrate`, `db push`, etc. If `DIRECT_URL` is unset, the CLI falls back to `DATABASE_URL` (fine for local Postgres).
+- **CLI (`prisma.config.ts`):** Uses **`DIRECT_URL`** when set (Neon **direct** host, no **`-pooler`**) for `migrate`, `db push`, etc. If `DIRECT_URL` is unset, the CLI falls back to `DATABASE_URL` (fine for local Postgres).
 - **tRPC:** `ctx.prisma` in all procedures. Use `prismaHealth` in `_app.ts` to verify DB connectivity from the app.
 - **Migrations:** Run `npm run db:migrate` after schema changes. Use `db:push` for quick prototyping without migration files.
 
@@ -74,22 +74,22 @@ Use this checklist when deploying the Next.js app (for example [Vercel](https://
 
 1. **Build command:** `npm run build` (default on most hosts). **Output:** Next.js.
 2. **Install:** `npm install` (postinstall runs `prisma generate`).
-3. **Node:** Use **Node 20+** on the host. `lib/prisma.ts` uses **`pg`** against Supabase’s pooler (or direct Postgres).
+3. **Node:** Use **Node 20+** on the host. `lib/prisma.ts` uses **`pg`** with the connection string you provide (Neon pooled or direct Postgres).
 4. **Environment variables** (minimum):
-   - **`DATABASE_URL`:** Supabase **transaction pooler** URL (port **6543**) with **`?pgbouncer=true`**. From [Supabase](https://supabase.com/dashboard) → **Settings** → **Database** → connection string (URI, Transaction pooler).
-   - **`DIRECT_URL`** (recommended): **Direct** Postgres (**5432**) for Prisma CLI (`migrate`, `db push`). `prisma.config.ts` prefers `DIRECT_URL` over `DATABASE_URL` for those commands.
+   - **`DATABASE_URL`:** Neon **pooled** connection string from [Neon Console](https://console.neon.tech) → your project → **Connection details** (URI that includes **`-pooler`** and **`sslmode=require`**).
+   - **`DIRECT_URL`** (recommended on Neon): **Direct** (non-pooled) connection for Prisma CLI (`migrate`, `db push`). `prisma.config.ts` prefers `DIRECT_URL` over `DATABASE_URL` for those commands.
    - **Clerk:** `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`. In the [Clerk Dashboard](https://dashboard.clerk.com), add your production domain to allowed origins / redirect URLs.
    - **Collab (if used):** `COLLAB_JWT_SECRET` (same value as the collab server), `NEXT_PUBLIC_HOCUSPOCUS_URL` (`wss://…` to your collab host).
 5. **Smoke test after deploy:** open the app signed-in, or call tRPC **`prismaHealth`** / **`dbHealth`** from the client or server to confirm the database is reachable.
 
 ### Prisma migrations in CI or from your machine
 
-- Prefer **`DIRECT_URL`** (Supabase direct **5432**) for `prisma migrate deploy` so the CLI is not going through the transaction pooler.
-- If you only have one URL, use the direct string for the migrate job’s env; keep **`DATABASE_URL`** on the app host as the **transaction pooler** string.
+- Prefer **`DIRECT_URL`** (Neon **direct** connection) for `prisma migrate deploy` so the CLI does not use the pooler.
+- If you only have one URL for a CI migrate job, use the **direct** string there; keep **`DATABASE_URL`** on the app host as the **pooled** string.
 
 ### Realtime collab (Hocuspocus)
 
-- Run collab as a **separate** process or container (see **Docker** and **Render** below). `server/hocuspocus.ts` uses **`PrismaPg({ connectionString })`** like the Next.js app. A **direct 5432** URL is often simplest for a long-lived collab process against the same Supabase project.
+- Run collab as a **separate** process or container (see **Docker** and **Render** below). `server/hocuspocus.ts` uses **`PrismaPg({ connectionString })`** like the Next.js app. A **direct** Neon URL (or the same **`DATABASE_URL`** as the app) works; long-lived processes often use the direct endpoint to avoid pooler semantics.
 - **`COLLAB_JWT_SECRET`** must match exactly between Next.js and the collab service.
 - After changing **`NEXT_PUBLIC_HOCUSPOCUS_URL`**, redeploy the Next.js app so the client bundle picks up the new WebSocket URL.
 
@@ -144,7 +144,7 @@ Deploy Hocuspocus as a **second** [Render](https://render.com) **Web Service** (
 3. **Dockerfile path:** `Dockerfile.collab` (repo root). Render does not pick a nonstandard name automatically; you must set this in the service settings.
 4. **Build / start:** Leave the **build command** empty (the Dockerfile builds the image). Leave the **start command** empty unless you have a reason to override; the image listens on Render’s `PORT` because `server/hocuspocus.ts` falls back to `process.env.PORT` when `HOCUSPOCUS_PORT` is unset.
 5. **Environment variables** for the collab service (match your Next.js / Prisma setup):
-   - `DATABASE_URL`: same Postgres URL as the app (e.g. Supabase direct **5432** or your pooler, depending on how you run collab).
+   - `DATABASE_URL`: same Postgres URL as the app (Neon **pooled** or **direct**, same rules as Next.js).
    - `COLLAB_JWT_SECRET`: **exactly the same** string as on the Next.js service.
 6. **Next.js service:** Set `NEXT_PUBLIC_HOCUSPOCUS_URL` to `wss://<collab-service-hostname>` (the collab service’s public URL, `wss` not `ws`). Redeploy Next so the client bundle picks up the change.
 7. **Health check (Render):** Set the service **health check path** to **`/health`**. The collab server responds with `200` and JSON `{"status":"ok","service":"google-docs-collab"}` (plain HTTP on the same host and port as the WebSocket upgrade).
@@ -210,8 +210,8 @@ Avoid protecting `/sign-in` and `/sign-up` to prevent redirect loops.
 
 | Variable                            | Required   | Description                                                         |
 | ----------------------------------- | ---------- | ------------------------------------------------------------------- |
-| `DATABASE_URL`                      | Yes        | Postgres for Prisma, raw SQL, collab; dev: local; prod: Supabase **transaction pooler** (6543) + `?pgbouncer=true` |
-| `DIRECT_URL`                        | Optional   | Supabase **direct** (5432) for Prisma CLI (`migrate`, `db push`). See `prisma.config.ts`. |
+| `DATABASE_URL`                      | Yes        | Postgres for Prisma, raw SQL, collab; dev: local; prod (Neon): **pooled** URI (`-pooler`, `sslmode=require`) |
+| `DIRECT_URL`                        | Optional   | Neon **direct** URI for Prisma CLI (`migrate`, `db push`). See `prisma.config.ts`. |
 | `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Yes (auth) | From [Clerk Dashboard](https://dashboard.clerk.com)                 |
 | `CLERK_SECRET_KEY`                  | Yes (auth) | From Clerk Dashboard                                                |
 | `COLLAB_JWT_SECRET`                 | Yes (collab) | Shared secret for Hocuspocus auth tokens (same for Next + collab server) |
