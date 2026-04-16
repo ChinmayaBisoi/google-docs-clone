@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { trpc } from "@/trpc/client";
+import { useTRPC } from "@/trpc/client";
 import {
 	recordWarmTimestamp,
 	shouldWarmSocket,
 } from "@/lib/socket/warm-cache";
+import { useQuery } from "@tanstack/react-query";
 
 type Status = "unknown" | "online" | "offline" | "not-configured";
 
@@ -14,56 +15,39 @@ const POLL_MS = 45_000;
 export function SocketStatusIndicator() {
 	const [status, setStatus] = useState<Status>("unknown");
 	const [latencyMs, setLatencyMs] = useState<number | null>(null);
-	const mounted = useRef(true);
-	const collabHealthMutation = trpc.collabHealth.useMutation();
+	const didWarmRef = useRef(false);
+	const trpc = useTRPC();
+
+	const healthQuery = useQuery({
+		...trpc.collabHealth.queryOptions(),
+		refetchInterval: POLL_MS,
+	});
 
 	useEffect(() => {
-		mounted.current = true;
-		return () => {
-			mounted.current = false;
-		};
-	}, []);
-
-	useEffect(() => {
-		let cancelled = false;
-
-		async function tick(isInitial: boolean) {
-			const wantWarm = isInitial && shouldWarmSocket();
-
-			try {
-				const result = await collabHealthMutation.mutateAsync();
-
-				if (cancelled || !mounted.current) return;
-
-				if (!result.configured) {
-					setStatus("not-configured");
-					setLatencyMs(null);
-					return;
-				}
-
-				const ok = result.ok;
-				setStatus(ok ? "online" : "offline");
-				setLatencyMs("latencyMs" in result ? result.latencyMs : null);
-
-				if (wantWarm && ok) {
-					recordWarmTimestamp();
-				}
-			} catch {
-				if (cancelled || !mounted.current) return;
-				setStatus("offline");
-				setLatencyMs(null);
-			}
+		if (healthQuery.isError) {
+			setStatus("offline");
+			setLatencyMs(null);
+			return;
 		}
 
-		void tick(true);
-		const id = setInterval(() => {
-			void tick(false);
-		}, POLL_MS);
-		return () => {
-			cancelled = true;
-			clearInterval(id);
-		};
-	}, [collabHealthMutation]);
+		const result = healthQuery.data;
+		if (!result) return;
+
+		if (!result.configured) {
+			setStatus("not-configured");
+			setLatencyMs(null);
+			return;
+		}
+
+		const ok = result.ok;
+		setStatus(ok ? "online" : "offline");
+		setLatencyMs("latencyMs" in result ? result.latencyMs : null);
+
+		if (!didWarmRef.current && shouldWarmSocket() && ok) {
+			didWarmRef.current = true;
+			recordWarmTimestamp();
+		}
+	}, [healthQuery.isError, healthQuery.data]);
 
 	if (status === "not-configured") {
 		return null;
