@@ -3,6 +3,8 @@
 import { LogoLong } from "@/components/Logo";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { NavbarUserMenu } from "@/components/auth/NavbarUserMenu";
+import { DbStatusIndicator } from "@/components/db/DbStatusIndicator";
+import { SocketStatusIndicator } from "@/components/socket/SocketStatusIndicator";
 import { useLandingDocumentSearch } from "@/components/landing/LandingDocumentSearchProvider";
 import { Button } from "@/components/ui/button";
 import { Search, X } from "lucide-react";
@@ -17,6 +19,8 @@ export function Navbar() {
 			</div>
 
 			<div className="flex items-center gap-1">
+				<DbStatusIndicator />
+				<SocketStatusIndicator />
 				<ThemeSwitcher />
 				<NavbarUserMenu />
 			</div>
